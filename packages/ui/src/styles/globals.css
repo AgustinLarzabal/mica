@@ -122,6 +122,7 @@
   --font-sans: "Inter Variable", sans-serif;
   --font-heading: var(--font-mono);
   --font-mono: "JetBrains Mono Variable", monospace;
+  --font-pixel: "Geist Pixel Variable", system-ui;
 }
 
 @layer base {
