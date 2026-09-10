@@ -7,7 +7,26 @@ export default [
   {
     rules: {
       "import/no-cycle": "off",
-      "import/order": "off",
+      "import/order": [
+        "error",
+        {
+          alphabetize: { order: "asc", caseInsensitive: true },
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            "parent",
+            "sibling",
+            "index",
+            "object",
+            "type",
+          ],
+          distinctGroup: true,
+          sortTypesGroup: false,
+          named: true,
+          warnOnUnassignedImports: false,
+        },
+      ],
       "sort-imports": "off",
       "@typescript-eslint/array-type": "off",
       "@typescript-eslint/require-await": "off",

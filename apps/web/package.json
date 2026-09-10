@@ -27,6 +27,7 @@
   "devDependencies": {
     "@tanstack/devtools-vite": "latest",
     "@tanstack/eslint-config": "latest",
+    "@tanstack/eslint-plugin-router": "^1.162.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
