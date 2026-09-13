@@ -3,6 +3,8 @@ import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 
 import appCss from "@workspace/ui/globals.css?url"
+import { Footer } from "@/components/footer"
+import { Header } from "@/components/header"
 
 export const Route = createRootRoute({
   head: () => ({
@@ -40,8 +42,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="font-sans antialiased">
+        <Header />
         {children}
+        <Footer />
         <TanStackDevtools
           config={{
             position: "bottom-right",
