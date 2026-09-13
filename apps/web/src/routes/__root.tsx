@@ -4,7 +4,6 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 
 import appCss from "@workspace/ui/globals.css?url"
 import { Footer } from "@/components/footer"
-import { Header } from "@/components/header"
 
 export const Route = createRootRoute({
   head: () => ({
@@ -42,8 +41,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="font-sans antialiased">
-        <Header />
+      <body className="flex min-h-svh flex-col font-sans antialiased">
         {children}
         <Footer />
         <TanStackDevtools
