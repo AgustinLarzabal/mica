@@ -1,4 +1,4 @@
-import { Flag } from "@/components/flags/flag"
+import { Flag } from "@workspace/ui/components/flags/flag"
 
 export function ItemDetails() {
   return (
