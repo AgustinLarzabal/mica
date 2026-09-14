@@ -9,7 +9,7 @@ import { ItemPreview } from "./item-preview"
 
 export function ItemTabs() {
   return (
-    <Tabs defaultValue="preview" className="w-full gap-0 lg:hidden">
+    <Tabs defaultValue="details" className="w-full gap-0 lg:hidden">
       <TabsList variant="line" className="w-full p-0">
         <TabsTrigger value="preview" className="font-mono uppercase">
           Preview
