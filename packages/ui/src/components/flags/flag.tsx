@@ -1,15 +1,12 @@
 import * as React from "react"
 
-import {
-  getFlagSrcSet,
-  getFlagUrl,
-  type FlagFormat,
-  type FlagRatio,
-  type FlagWidth,
-} from "./flag-utils"
+import { getFlagSrcSet, getFlagUrl } from "./flag-utils"
+import type { FlagFormat, FlagRatio, FlagWidth } from "./flag-utils"
 
-export interface FlagProps
-  extends Omit<React.ComponentProps<"img">, "src" | "srcSet" | "width" | "height"> {
+export interface FlagProps extends Omit<
+  React.ComponentProps<"img">,
+  "src" | "srcSet" | "width" | "height"
+> {
   code: string
   format?: FlagFormat
   width?: FlagWidth | number
@@ -34,8 +31,14 @@ export function Flag({
   const src = getFlagUrl(code, { format, width, ratio })
   const srcSet = getFlagSrcSet(code, { format, width, ratio })
   const normalizedCode = code.trim().toLowerCase()
-  const height = ratio === "original" ? undefined : ratio === "1x1" ? width : Math.round(width * 0.75)
-  const aspectRatio = ratio === "original" ? undefined : ratio === "1x1" ? "1 / 1" : "4 / 3"
+  const height =
+    ratio === "original"
+      ? undefined
+      : ratio === "1x1"
+        ? width
+        : Math.round(width * 0.75)
+  const aspectRatio =
+    ratio === "original" ? undefined : ratio === "1x1" ? "1 / 1" : "4 / 3"
 
   return (
     <img
@@ -57,11 +60,13 @@ export function Flag({
       style={{
         display: "block",
         maxWidth: "100%",
-        ...(aspectRatio ? {
-          aspectRatio,
-          objectFit: "contain" as const,
-          objectPosition: "center" as const,
-        } : {}),
+        ...(aspectRatio
+          ? {
+              aspectRatio,
+              objectFit: "contain" as const,
+              objectPosition: "center" as const,
+            }
+          : {}),
         ...style,
       }}
     />
