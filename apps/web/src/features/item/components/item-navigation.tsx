@@ -8,7 +8,7 @@ import {
   BreadcrumbSeparator,
 } from "@workspace/ui/components/breadcrumb"
 
-export function ExploreNavigation() {
+export function ItemNavigation() {
   return (
     <Breadcrumb>
       <BreadcrumbList className="gap-2 font-mono text-xs tracking-widest text-muted uppercase">

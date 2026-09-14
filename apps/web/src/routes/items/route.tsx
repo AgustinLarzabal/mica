@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { ExploreHeader } from "@/features/explore/components/explore-header"
-import { ItemViewer } from "@/features/item/components/item-viewer"
+import { createFileRoute, Outlet } from "@tanstack/react-router"
+import { ItemHeader } from "@/features/item/components/item-header"
 
 export const Route = createFileRoute("/items")({
   component: RouteComponent,
@@ -9,9 +8,9 @@ export const Route = createFileRoute("/items")({
 function RouteComponent() {
   return (
     <>
-      <ExploreHeader />
+      <ItemHeader />
       <main className="flex flex-1">
-        <ItemViewer />
+        <Outlet />
       </main>
     </>
   )
