@@ -37,6 +37,14 @@ pnpm --filter api test
 pnpm --filter api test:watch
 ```
 
+The PostgreSQL integration test is intentionally separate from the ordinary
+test task. It starts a Compose service, exercises readiness through the real
+Drizzle and `pg` boundary, and stops the service without deleting its volume:
+
+```bash
+pnpm test:db
+```
+
 Alternatively, run the same scripts from `apps/web`:
 
 ```bash

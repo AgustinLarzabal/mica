@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest"
 
 import { createApp } from "./app.js"
 
+const ready = async () => {}
+
 describe("API", () => {
   it("reports liveness without external dependencies", async () => {
     const response = await createApp({
       allowedOrigins: ["http://localhost:3000"],
+      checkReadiness: ready,
     }).request("/health")
 
     expect(response.status).toBe(200)
@@ -15,13 +18,51 @@ describe("API", () => {
   it("prevents liveness responses from being cached", async () => {
     const response = await createApp({
       allowedOrigins: ["http://localhost:3000"],
+      checkReadiness: ready,
     }).request("/health")
 
     expect(response.headers.get("cache-control")).toBe("no-store")
   })
 
+  it("reports readiness after the injected dependency succeeds", async () => {
+    const response = await createApp({
+      allowedOrigins: ["http://localhost:3000"],
+      checkReadiness: async () => {},
+    }).request("/ready")
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("cache-control")).toBe("no-store")
+    await expect(response.json()).resolves.toEqual({ status: "ok" })
+  })
+
+  it("reports safe unavailability while liveness remains healthy", async () => {
+    const lines: Array<string> = []
+    const app = createApp({
+      allowedOrigins: ["http://localhost:3000"],
+      checkReadiness: async () => {
+        throw new Error("postgresql://operator:secret@database.internal/mica")
+      },
+      log: (line) => lines.push(line),
+    })
+
+    const readiness = await app.request("/ready")
+    const liveness = await app.request("/health")
+    const readinessBody = await readiness.json()
+
+    expect(readiness.status).toBe(503)
+    expect(readiness.headers.get("cache-control")).toBe("no-store")
+    expect(readinessBody).toEqual({ status: "unavailable" })
+    expect(JSON.stringify(readinessBody)).not.toContain("database.internal")
+    expect(lines.some((line) => line.includes("database.internal"))).toBe(true)
+    expect(liveness.status).toBe(200)
+    await expect(liveness.json()).resolves.toEqual({ status: "ok" })
+  })
+
   it("preserves bounded request IDs and replaces missing or invalid IDs", async () => {
-    const app = createApp({ allowedOrigins: ["http://localhost:3000"] })
+    const app = createApp({
+      allowedOrigins: ["http://localhost:3000"],
+      checkReadiness: ready,
+    })
     const validRequestId = "browser.trace_123:child-4"
     const preserved = await app.request("/health", {
       headers: { "x-request-id": validRequestId },
@@ -39,7 +80,10 @@ describe("API", () => {
   })
 
   it("allows only configured browser origins without credentials", async () => {
-    const app = createApp({ allowedOrigins: ["https://mica.example"] })
+    const app = createApp({
+      allowedOrigins: ["https://mica.example"],
+      checkReadiness: ready,
+    })
     const allowed = await app.request("/health", {
       headers: { origin: "https://mica.example" },
     })
@@ -69,7 +113,10 @@ describe("API", () => {
   })
 
   it("returns consistent public JSON errors for unknown routes and failures", async () => {
-    const app = createApp({ allowedOrigins: ["https://mica.example"] })
+    const app = createApp({
+      allowedOrigins: ["https://mica.example"],
+      checkReadiness: ready,
+    })
     app.get("/unexpected", () => {
       throw new Error("database password leaked")
     })
@@ -88,9 +135,10 @@ describe("API", () => {
     expect(unexpected.headers.get("x-request-id")).toBeTruthy()
   })
 
-  it("serves a generated OpenAPI contract for liveness", async () => {
+  it("serves a generated OpenAPI contract for operational endpoints", async () => {
     const response = await createApp({
       allowedOrigins: ["http://localhost:3000"],
+      checkReadiness: ready,
     }).request("/openapi.json")
     const document = (await response.json()) as {
       components: { schemas: { HealthResponse: unknown } }
@@ -103,6 +151,9 @@ describe("API", () => {
             }
           }
         }
+        "/ready": {
+          get: { responses: Record<string, unknown> }
+        }
       }
     }
 
@@ -110,6 +161,13 @@ describe("API", () => {
     expect(response.headers.get("cache-control")).toBe("no-store")
     expect(document.openapi).toBe("3.1.0")
     expect(document.paths).toHaveProperty("/health")
+    expect(document.paths).toHaveProperty("/ready")
+    expect(document.paths["/ready"].get.responses).toEqual(
+      expect.objectContaining({
+        "200": expect.any(Object),
+        "503": expect.any(Object),
+      })
+    )
     expect(document.paths["/health"].get.responses["200"].headers).toEqual(
       expect.objectContaining({
         "Cache-Control": expect.any(Object),
@@ -127,6 +185,7 @@ describe("API", () => {
     const lines: Array<string> = []
     const app = createApp({
       allowedOrigins: ["http://localhost:3000"],
+      checkReadiness: ready,
       log: (line) => lines.push(line),
     })
 

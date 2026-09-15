@@ -1,4 +1,5 @@
 import { serve } from "@hono/node-server"
+import { createDatabase } from "@workspace/db"
 
 import { createApp } from "./app.js"
 import { loadConfig } from "./config.js"
@@ -22,7 +23,11 @@ function writeEvent(
 }
 
 const config = loadConfig(process.env)
-const app = createApp(config)
+const database = createDatabase(config.databaseUrl)
+const app = createApp({
+  allowedOrigins: config.allowedOrigins,
+  checkReadiness: database.checkReadiness,
+})
 const server = serve(
   {
     fetch: app.fetch,
@@ -41,10 +46,21 @@ function shutdown(signal: NodeJS.Signals) {
 
   writeEvent(console.log, "info", "server_stopping", { signal })
 
-  server.close((error) => {
+  server.close(async (error) => {
     if (error) {
       writeEvent(console.error, "error", "server_stop_failed", {
         message: error.message,
+      })
+      process.exitCode = 1
+    }
+
+    try {
+      await database.close()
+      writeEvent(console.log, "info", "database_pool_closed")
+    } catch (poolError) {
+      writeEvent(console.error, "error", "database_pool_close_failed", {
+        message:
+          poolError instanceof Error ? poolError.message : String(poolError),
       })
       process.exitCode = 1
     }

@@ -30,7 +30,34 @@ pnpm --filter api dev
 ```
 
 The API defaults to port 3001. Its liveness contract is available at
-`GET /health`, and its generated contract is available at `GET /openapi.json`.
+`GET /health`, PostgreSQL-backed readiness is available at `GET /ready`, and
+its generated contract is available at `GET /openapi.json`.
+
+## Database
+
+Copy `.env.example` to `.env.local` and replace the example password. Start or
+stop the persistent local PostgreSQL service from the repository root:
+
+```bash
+pnpm db:start
+pnpm db:stop
+```
+
+Database schemas live in the private `@workspace/db` package. Generate and
+commit SQL migrations after changing its schema, then apply migrations
+explicitly. API startup never applies migrations.
+
+```bash
+DATABASE_URL=postgresql://... pnpm db:generate
+DATABASE_URL=postgresql://... pnpm db:migrate
+```
+
+The real Drizzle/`pg` readiness path has a separate integration command. It
+starts and stops its own local Compose service while retaining its volume:
+
+```bash
+pnpm test:db
+```
 
 ## Adding components
 

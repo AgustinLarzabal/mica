@@ -5,6 +5,7 @@ import { cors } from "hono/cors"
 
 export interface AppOptions {
   allowedOrigins: ReadonlyArray<string>
+  checkReadiness: () => Promise<void>
   log?: (line: string) => void
 }
 
@@ -39,8 +40,50 @@ const healthRoute = createRoute({
   },
 })
 
+const unavailableResponseSchema = z
+  .object({
+    status: z.literal("unavailable"),
+  })
+  .openapi("UnavailableResponse")
+
+const operationalResponseHeaders = {
+  "Cache-Control": {
+    description: "Prevents caching of operational state",
+    schema: { type: "string" as const, enum: ["no-store"] },
+  },
+  "x-request-id": {
+    description: "Request correlation identifier",
+    schema: { type: "string" as const, minLength: 1, maxLength: 128 },
+  },
+}
+
+const readyRoute = createRoute({
+  method: "get",
+  path: "/ready",
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: healthResponseSchema,
+        },
+      },
+      description: "The API can perform database-backed work",
+      headers: operationalResponseHeaders,
+    },
+    503: {
+      content: {
+        "application/json": {
+          schema: unavailableResponseSchema,
+        },
+      },
+      description: "The API cannot currently perform database-backed work",
+      headers: operationalResponseHeaders,
+    },
+  },
+})
+
 const validRequestIdPattern = /^[A-Za-z0-9._:-]{1,128}$/
-const noStorePaths = new Set(["/health", "/openapi.json"])
+const noStorePaths = new Set(["/health", "/openapi.json", "/ready"])
 
 export function createApp(options: AppOptions) {
   const app = new OpenAPIHono()
@@ -86,6 +129,22 @@ export function createApp(options: AppOptions) {
   )
 
   app.openapi(healthRoute, (context) => context.json({ status: "ok" }, 200))
+  app.openapi(readyRoute, async (context) => {
+    try {
+      await options.checkReadiness()
+      return context.json({ status: "ok" }, 200)
+    } catch (error) {
+      log(
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          level: "error",
+          event: "readiness_check_failed",
+          error: error instanceof Error ? error.message : String(error),
+        })
+      )
+      return context.json({ status: "unavailable" }, 503)
+    }
+  })
 
   app.doc("/openapi.json", {
     info: {

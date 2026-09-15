@@ -25,6 +25,20 @@ const originSchema = z.string().superRefine((value, context) => {
   }
 })
 
+const databaseUrlSchema = z.string().superRefine((value, context) => {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
+      throw new Error("not a PostgreSQL URL")
+    }
+  } catch {
+    context.addIssue({
+      code: "custom",
+      message: "must be a valid PostgreSQL connection URL",
+    })
+  }
+})
+
 const environmentSchema = z.object({
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
   API_ALLOWED_ORIGINS: z
@@ -33,10 +47,12 @@ const environmentSchema = z.object({
     .min(1)
     .transform((value) => value.split(",").map((origin) => origin.trim()))
     .pipe(z.array(originSchema).min(1)),
+  DATABASE_URL: databaseUrlSchema,
 })
 
 export interface ApiConfig {
   allowedOrigins: Array<string>
+  databaseUrl: string
   port: number
 }
 
@@ -53,6 +69,7 @@ export function loadConfig(
 
   return {
     allowedOrigins: result.data.API_ALLOWED_ORIGINS,
+    databaseUrl: result.data.DATABASE_URL,
     port: result.data.API_PORT,
   }
 }
