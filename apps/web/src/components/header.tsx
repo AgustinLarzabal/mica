@@ -9,6 +9,14 @@ export function Header() {
           v{APP_VERSION}
         </span>
       </div>
+      <nav aria-label="Primary navigation">
+        <a
+          className="font-mono text-xs tracking-wider text-muted underline-offset-4 hover:text-foreground hover:underline"
+          href="/system-status"
+        >
+          System status
+        </a>
+      </nav>
     </header>
   )
 }
