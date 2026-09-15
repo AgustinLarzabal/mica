@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest"
 
 import { createApp } from "./app.js"
 
-const ready = async () => {}
+const successfulReadinessCheck = async () => {}
 
 describe("API", () => {
   it("reports liveness without external dependencies", async () => {
     const response = await createApp({
       allowedOrigins: ["http://localhost:3000"],
-      checkReadiness: ready,
+      checkReadiness: successfulReadinessCheck,
     }).request("/health")
 
     expect(response.status).toBe(200)
@@ -18,7 +18,7 @@ describe("API", () => {
   it("prevents liveness responses from being cached", async () => {
     const response = await createApp({
       allowedOrigins: ["http://localhost:3000"],
-      checkReadiness: ready,
+      checkReadiness: successfulReadinessCheck,
     }).request("/health")
 
     expect(response.headers.get("cache-control")).toBe("no-store")
@@ -61,7 +61,7 @@ describe("API", () => {
   it("preserves bounded request IDs and replaces missing or invalid IDs", async () => {
     const app = createApp({
       allowedOrigins: ["http://localhost:3000"],
-      checkReadiness: ready,
+      checkReadiness: successfulReadinessCheck,
     })
     const validRequestId = "browser.trace_123:child-4"
     const preserved = await app.request("/health", {
@@ -82,7 +82,7 @@ describe("API", () => {
   it("allows only configured browser origins without credentials", async () => {
     const app = createApp({
       allowedOrigins: ["https://mica.example"],
-      checkReadiness: ready,
+      checkReadiness: successfulReadinessCheck,
     })
     const allowed = await app.request("/health", {
       headers: { origin: "https://mica.example" },
@@ -115,7 +115,7 @@ describe("API", () => {
   it("returns consistent public JSON errors for unknown routes and failures", async () => {
     const app = createApp({
       allowedOrigins: ["https://mica.example"],
-      checkReadiness: ready,
+      checkReadiness: successfulReadinessCheck,
     })
     app.get("/unexpected", () => {
       throw new Error("database password leaked")
@@ -138,7 +138,7 @@ describe("API", () => {
   it("serves a generated OpenAPI contract for operational endpoints", async () => {
     const response = await createApp({
       allowedOrigins: ["http://localhost:3000"],
-      checkReadiness: ready,
+      checkReadiness: successfulReadinessCheck,
     }).request("/openapi.json")
     const document = (await response.json()) as {
       components: { schemas: { HealthResponse: unknown } }
@@ -185,7 +185,7 @@ describe("API", () => {
     const lines: Array<string> = []
     const app = createApp({
       allowedOrigins: ["http://localhost:3000"],
-      checkReadiness: ready,
+      checkReadiness: successfulReadinessCheck,
       log: (line) => lines.push(line),
     })
 

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "predev": "pnpm --filter @workspace/db build",
     "dev": "node --env-file-if-exists=.env.local --import tsx --watch src/server.ts",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "lint": "eslint",

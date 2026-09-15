@@ -2,6 +2,7 @@
   "name": "@workspace/db",
   "type": "module",
   "private": true,
+  "browser": false,
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "db:generate": "drizzle-kit generate",

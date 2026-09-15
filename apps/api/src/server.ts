@@ -23,7 +23,13 @@ function writeEvent(
 }
 
 const config = loadConfig(process.env)
-const database = createDatabase(config.databaseUrl)
+const database = createDatabase(config.databaseUrl, {
+  onPoolError: (error) => {
+    writeEvent(console.error, "error", "database_pool_error", {
+      message: error.message,
+    })
+  },
+})
 const app = createApp({
   allowedOrigins: config.allowedOrigins,
   checkReadiness: database.checkReadiness,

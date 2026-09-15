@@ -15,6 +15,17 @@ const healthResponseSchema = z
   })
   .openapi("HealthResponse")
 
+const operationalResponseHeaders = {
+  "Cache-Control": {
+    description: "Prevents caching of operational state",
+    schema: { type: "string" as const, enum: ["no-store"] },
+  },
+  "x-request-id": {
+    description: "Request correlation identifier",
+    schema: { type: "string" as const, minLength: 1, maxLength: 128 },
+  },
+}
+
 const healthRoute = createRoute({
   method: "get",
   path: "/health",
@@ -26,16 +37,7 @@ const healthRoute = createRoute({
         },
       },
       description: "The API process is serving HTTP",
-      headers: {
-        "Cache-Control": {
-          description: "Prevents caching of operational state",
-          schema: { type: "string", enum: ["no-store"] },
-        },
-        "x-request-id": {
-          description: "Request correlation identifier",
-          schema: { type: "string", minLength: 1, maxLength: 128 },
-        },
-      },
+      headers: operationalResponseHeaders,
     },
   },
 })
@@ -45,17 +47,6 @@ const unavailableResponseSchema = z
     status: z.literal("unavailable"),
   })
   .openapi("UnavailableResponse")
-
-const operationalResponseHeaders = {
-  "Cache-Control": {
-    description: "Prevents caching of operational state",
-    schema: { type: "string" as const, enum: ["no-store"] },
-  },
-  "x-request-id": {
-    description: "Request correlation identifier",
-    schema: { type: "string" as const, minLength: 1, maxLength: 128 },
-  },
-}
 
 const readyRoute = createRoute({
   method: "get",

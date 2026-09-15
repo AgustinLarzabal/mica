@@ -9,7 +9,7 @@
     "db:start": "docker compose --env-file .env.local up -d --wait postgres",
     "db:stop": "docker compose --env-file .env.local stop postgres",
     "dev": "turbo dev",
-    "lint": "turbo lint",
+    "lint": "turbo lint && node scripts/check-server-only-dependencies.mjs",
     "format": "turbo format",
     "test": "turbo test",
     "test:db": "sh scripts/test-db.sh",
