@@ -62,7 +62,9 @@ describe("API", () => {
     expect(preflight.headers.get("access-control-allow-origin")).toBe(
       "https://mica.example"
     )
-    expect(preflight.headers.has("access-control-allow-credentials")).toBe(false)
+    expect(preflight.headers.has("access-control-allow-credentials")).toBe(
+      false
+    )
     expect(preflight.headers.get("x-request-id")).toBeTruthy()
   })
 
@@ -141,6 +143,6 @@ describe("API", () => {
       status: 200,
     })
     expect(JSON.parse(lines[0] ?? "").timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    expect(JSON.parse(lines[0] ?? "").duration).toBeGreaterThanOrEqual(0)
+    expect(JSON.parse(lines[0] ?? "").durationMs).toBeGreaterThanOrEqual(0)
   })
 })

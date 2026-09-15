@@ -3,6 +3,24 @@ import { serve } from "@hono/node-server"
 import { createApp } from "./app.js"
 import { loadConfig } from "./config.js"
 
+type LogWriter = (message: string) => void
+
+function writeEvent(
+  write: LogWriter,
+  level: "error" | "info",
+  event: string,
+  details: Record<string, number | string> = {}
+) {
+  write(
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level,
+      event,
+      ...details,
+    })
+  )
+}
+
 const config = loadConfig(process.env)
 const app = createApp(config)
 const server = serve(
@@ -11,14 +29,7 @@ const server = serve(
     port: config.port,
   },
   ({ port }) => {
-    console.log(
-      JSON.stringify({
-        timestamp: new Date().toISOString(),
-        level: "info",
-        event: "server_started",
-        port,
-      })
-    )
+    writeEvent(console.log, "info", "server_started", { port })
   }
 )
 
@@ -28,25 +39,13 @@ function shutdown(signal: NodeJS.Signals) {
   if (shuttingDown) return
   shuttingDown = true
 
-  console.log(
-    JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level: "info",
-      event: "server_stopping",
-      signal,
-    })
-  )
+  writeEvent(console.log, "info", "server_stopping", { signal })
 
   server.close((error) => {
     if (error) {
-      console.error(
-        JSON.stringify({
-          timestamp: new Date().toISOString(),
-          level: "error",
-          event: "server_stop_failed",
-          message: error.message,
-        })
-      )
+      writeEvent(console.error, "error", "server_stop_failed", {
+        message: error.message,
+      })
       process.exitCode = 1
     }
   })

@@ -40,6 +40,7 @@ const healthRoute = createRoute({
 })
 
 const validRequestIdPattern = /^[A-Za-z0-9._:-]{1,128}$/
+const noStorePaths = new Set(["/health", "/openapi.json"])
 
 export function createApp(options: AppOptions) {
   const app = new OpenAPIHono()
@@ -63,9 +64,16 @@ export function createApp(options: AppOptions) {
         method: context.req.method,
         path: context.req.path,
         status: context.res.status,
-        duration: Number((performance.now() - startedAt).toFixed(3)),
+        durationMs: Number((performance.now() - startedAt).toFixed(3)),
       })
     )
+  })
+
+  app.use("*", async (context, next) => {
+    await next()
+    if (noStorePaths.has(context.req.path)) {
+      context.header("Cache-Control", "no-store")
+    }
   })
 
   app.use(
@@ -76,16 +84,6 @@ export function createApp(options: AppOptions) {
         options.allowedOrigins.includes(origin) ? origin : undefined,
     })
   )
-
-  app.use("/health", async (context, next) => {
-    await next()
-    context.header("Cache-Control", "no-store")
-  })
-
-  app.use("/openapi.json", async (context, next) => {
-    await next()
-    context.header("Cache-Control", "no-store")
-  })
 
   app.openapi(healthRoute, (context) => context.json({ status: "ok" }, 200))
 
