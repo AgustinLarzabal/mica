@@ -1,9 +1,9 @@
 # Testing
 
-The web application owns this repository's test suite. Tests, test setup,
-Vitest configuration, and test scripts belong in `apps/web`. The shared UI
-package in `packages/ui` has no owned tests, test configuration, setup module,
-or test scripts.
+The web and API applications own their respective test suites. Tests, test
+setup, Vitest configuration, and test scripts belong in the application whose
+public behavior they cover. The shared UI package in `packages/ui` has no owned
+tests, test configuration, setup module, or test scripts.
 
 Web application tests may import components from `@workspace/ui` normally.
 Those components can execute as part of an application test, but source owned
@@ -19,8 +19,8 @@ pnpm test
 ```
 
 This dispatches the terminating `test` script to workspaces that own one. At
-present, that is the web application. The shared UI package does not own a test
-script.
+present, those are the web and API applications. The shared UI package does not
+own a test script.
 
 The web workspace can also be targeted explicitly from the repository root:
 
@@ -28,6 +28,13 @@ The web workspace can also be targeted explicitly from the repository root:
 pnpm --filter web test
 pnpm --filter web test:watch
 pnpm --filter web test:coverage
+```
+
+The API's Node-environment route tests can be targeted in the same way:
+
+```bash
+pnpm --filter api test
+pnpm --filter api test:watch
 ```
 
 Alternatively, run the same scripts from `apps/web`:
