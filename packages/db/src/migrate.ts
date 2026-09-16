@@ -1,12 +1,9 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator"
 
 import { createDatabase } from "./connection.js"
+import { resolveDatabaseUrl } from "./database-url.js"
 
-const databaseUrl = process.env.DATABASE_URL
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required to apply migrations")
-}
+const databaseUrl = resolveDatabaseUrl(process.env)
 
 const database = createDatabase(databaseUrl)
 

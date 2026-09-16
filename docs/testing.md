@@ -1,9 +1,11 @@
 # Testing
 
-The web and API applications own their respective test suites. Tests, test
-setup, Vitest configuration, and test scripts belong in the application whose
-public behavior they cover. The shared UI package in `packages/ui` has no owned
-tests, test configuration, setup module, or test scripts.
+The web and API applications own their respective test suites. The database
+package also owns deterministic unit tests for its local configuration logic.
+Tests, test setup, Vitest configuration, and test scripts belong in the
+workspace whose public behavior they cover. The shared UI package in
+`packages/ui` has no owned tests, test configuration, setup module, or test
+scripts.
 
 Web application tests may import components from `@workspace/ui` normally.
 Those components can execute as part of an application test, but source owned
@@ -19,8 +21,8 @@ pnpm test
 ```
 
 This dispatches the terminating `test` script to workspaces that own one. At
-present, those are the web and API applications. The shared UI package does not
-own a test script.
+present, those are the web application, API application, and database package.
+The shared UI package does not own a test script.
 
 The web workspace can also be targeted explicitly from the repository root:
 
@@ -35,6 +37,12 @@ The API's Node-environment route tests can be targeted in the same way:
 ```bash
 pnpm --filter api test
 pnpm --filter api test:watch
+```
+
+The database package's deterministic unit tests can be run independently:
+
+```bash
+pnpm --filter @workspace/db test
 ```
 
 The PostgreSQL integration test is intentionally separate from the ordinary

@@ -45,11 +45,14 @@ pnpm db:stop
 
 Database schemas live in the private `@workspace/db` package. Generate and
 commit SQL migrations after changing its schema, then apply migrations
-explicitly. API startup never applies migrations.
+explicitly. API startup never applies migrations. The migration command loads
+the root `.env.local` file and builds its connection URL from the same
+`POSTGRES_*` values used by Compose. An exported `DATABASE_URL` takes
+precedence when targeting another environment.
 
 ```bash
 DATABASE_URL=postgresql://... pnpm db:generate
-DATABASE_URL=postgresql://... pnpm db:migrate
+pnpm db:migrate
 ```
 
 The real Drizzle/`pg` readiness path has a separate integration command. It
