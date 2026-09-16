@@ -1,13 +1,16 @@
 import { TanStackDevtools } from "@tanstack/react-devtools"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router"
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Scripts,
+} from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import appCss from "@workspace/ui/globals.css?url"
-import { useState } from "react"
 
+import type { RouterContext } from "@/router"
 import { Footer } from "@/components/footer"
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       {
@@ -38,17 +41,13 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient())
-
   return (
     <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
       <body className="flex min-h-svh flex-col font-sans antialiased">
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+        {children}
         <Footer />
         <TanStackDevtools
           config={{

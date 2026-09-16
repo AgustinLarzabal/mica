@@ -7,6 +7,7 @@
     "build": "tsc -p tsconfig.build.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file-if-exists=../../.env.local --import tsx src/migrate.ts",
+    "db:seed": "node --env-file-if-exists=../../.env.local --import tsx src/run-seed.ts",
     "format": "prettier --write \"**/*.{ts,json}\"",
     "lint": "eslint",
     "test": "vitest run src/database-url.test.ts",
@@ -15,7 +16,9 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.44.5",
-    "pg": "^8.16.3"
+    "drizzle-zod": "^0.8.3",
+    "pg": "^8.16.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tanstack/eslint-config": "latest",

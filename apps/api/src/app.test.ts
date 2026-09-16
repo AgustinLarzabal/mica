@@ -204,4 +204,122 @@ describe("API", () => {
     expect(JSON.parse(lines[0] ?? "").timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/)
     expect(JSON.parse(lines[0] ?? "").durationMs).toBeGreaterThanOrEqual(0)
   })
+
+  describe("GET /v1/coins/{coinId}", () => {
+    const coinId = "00000000-0000-4000-8000-000000000001"
+    const coin = {
+      id: coinId,
+      title: "First coin",
+      createdAt: new Date("2026-09-16T10:00:00.000Z"),
+      updatedAt: new Date("2026-09-16T11:00:00.000Z"),
+    }
+
+    it("returns the Coin contract with UTC timestamps and no caching", async () => {
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        findCoinById: async () => coin,
+      }).request(`/v1/coins/${coinId}`)
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get("cache-control")).toBe("no-store")
+      await expect(response.json()).resolves.toEqual({
+        id: coinId,
+        title: "First coin",
+        createdAt: "2026-09-16T10:00:00.000Z",
+        updatedAt: "2026-09-16T11:00:00.000Z",
+      })
+    })
+
+    it("rejects malformed IDs before lookup", async () => {
+      let lookupCount = 0
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        findCoinById: async () => {
+          lookupCount += 1
+          return coin
+        },
+      }).request("/v1/coins/not-a-uuid")
+
+      expect(response.status).toBe(400)
+      expect(response.headers.get("cache-control")).toBe("no-store")
+      expect(lookupCount).toBe(0)
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: "invalid_coin_id",
+          message: "Coin ID must be a valid UUID",
+        },
+      })
+    })
+
+    it("distinguishes a missing Coin", async () => {
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        findCoinById: async () => null,
+      }).request(`/v1/coins/${coinId}`)
+
+      expect(response.status).toBe(404)
+      expect(response.headers.get("cache-control")).toBe("no-store")
+      await expect(response.json()).resolves.toEqual({
+        error: { code: "coin_not_found", message: "Coin not found" },
+      })
+    })
+
+    it("keeps lookup failures safe and correlated", async () => {
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        findCoinById: async () => {
+          throw new Error("postgresql://operator:secret@database.internal/mica")
+        },
+      }).request(`/v1/coins/${coinId}`, {
+        headers: { "x-request-id": "coin-request-42" },
+      })
+
+      expect(response.status).toBe(500)
+      expect(response.headers.get("cache-control")).toBe("no-store")
+      expect(response.headers.get("x-request-id")).toBe("coin-request-42")
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: "internal_error",
+          message: "Internal server error",
+        },
+      })
+    })
+
+    it("documents named success and error schemas", async () => {
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+      }).request("/openapi.json")
+      const document = (await response.json()) as {
+        components: { schemas: Record<string, unknown> }
+        paths: {
+          "/v1/coins/{coinId}": {
+            get: { responses: Record<string, unknown> }
+          }
+        }
+      }
+
+      expect(document.paths["/v1/coins/{coinId}"].get.responses).toEqual(
+        expect.objectContaining({
+          "200": expect.any(Object),
+          "400": expect.any(Object),
+          "404": expect.any(Object),
+          "500": expect.any(Object),
+        })
+      )
+      expect(document.components.schemas).toEqual(
+        expect.objectContaining({
+          Coin: expect.any(Object),
+          CoinPathParameters: expect.any(Object),
+          InvalidCoinIdError: expect.any(Object),
+          CoinNotFoundError: expect.any(Object),
+          InternalError: expect.any(Object),
+        })
+      )
+    })
+  })
 })

@@ -33,6 +33,7 @@ const database = createDatabase(config.databaseUrl, {
 const app = createApp({
   allowedOrigins: config.allowedOrigins,
   checkReadiness: database.checkReadiness,
+  findCoinById: database.findCoinById,
 })
 const server = serve(
   {

@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SystemStatusRouteImport } from './routes/system-status'
 import { Route as ItemsRouteRouteImport } from './routes/items/route'
+import { Route as CoinsRouteRouteImport } from './routes/coins/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ItemsItemIdRouteImport } from './routes/items/$itemId'
+import { Route as CoinsCoinIdRouteImport } from './routes/coins/$coinId'
 
 const SystemStatusRoute = SystemStatusRouteImport.update({
   id: '/system-status',
@@ -22,6 +24,11 @@ const SystemStatusRoute = SystemStatusRouteImport.update({
 const ItemsRouteRoute = ItemsRouteRouteImport.update({
   id: '/items',
   path: '/items',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoinsRouteRoute = CoinsRouteRouteImport.update({
+  id: '/coins',
+  path: '/coins',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -34,36 +41,67 @@ const ItemsItemIdRoute = ItemsItemIdRouteImport.update({
   path: '/$itemId',
   getParentRoute: () => ItemsRouteRoute,
 } as any)
+const CoinsCoinIdRoute = CoinsCoinIdRouteImport.update({
+  id: '/$coinId',
+  path: '/$coinId',
+  getParentRoute: () => CoinsRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/coins': typeof CoinsRouteRouteWithChildren
   '/items': typeof ItemsRouteRouteWithChildren
   '/system-status': typeof SystemStatusRoute
+  '/coins/$coinId': typeof CoinsCoinIdRoute
   '/items/$itemId': typeof ItemsItemIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/coins': typeof CoinsRouteRouteWithChildren
   '/items': typeof ItemsRouteRouteWithChildren
   '/system-status': typeof SystemStatusRoute
+  '/coins/$coinId': typeof CoinsCoinIdRoute
   '/items/$itemId': typeof ItemsItemIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/coins': typeof CoinsRouteRouteWithChildren
   '/items': typeof ItemsRouteRouteWithChildren
   '/system-status': typeof SystemStatusRoute
+  '/coins/$coinId': typeof CoinsCoinIdRoute
   '/items/$itemId': typeof ItemsItemIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/items' | '/system-status' | '/items/$itemId'
+  fullPaths:
+    | '/'
+    | '/coins'
+    | '/items'
+    | '/system-status'
+    | '/coins/$coinId'
+    | '/items/$itemId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/items' | '/system-status' | '/items/$itemId'
-  id: '__root__' | '/' | '/items' | '/system-status' | '/items/$itemId'
+  to:
+    | '/'
+    | '/coins'
+    | '/items'
+    | '/system-status'
+    | '/coins/$coinId'
+    | '/items/$itemId'
+  id:
+    | '__root__'
+    | '/'
+    | '/coins'
+    | '/items'
+    | '/system-status'
+    | '/coins/$coinId'
+    | '/items/$itemId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CoinsRouteRoute: typeof CoinsRouteRouteWithChildren
   ItemsRouteRoute: typeof ItemsRouteRouteWithChildren
   SystemStatusRoute: typeof SystemStatusRoute
 }
@@ -84,6 +122,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItemsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coins': {
+      id: '/coins'
+      path: '/coins'
+      fullPath: '/coins'
+      preLoaderRoute: typeof CoinsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -98,8 +143,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItemsItemIdRouteImport
       parentRoute: typeof ItemsRouteRoute
     }
+    '/coins/$coinId': {
+      id: '/coins/$coinId'
+      path: '/$coinId'
+      fullPath: '/coins/$coinId'
+      preLoaderRoute: typeof CoinsCoinIdRouteImport
+      parentRoute: typeof CoinsRouteRoute
+    }
   }
 }
+
+interface CoinsRouteRouteChildren {
+  CoinsCoinIdRoute: typeof CoinsCoinIdRoute
+}
+
+const CoinsRouteRouteChildren: CoinsRouteRouteChildren = {
+  CoinsCoinIdRoute: CoinsCoinIdRoute,
+}
+
+const CoinsRouteRouteWithChildren = CoinsRouteRoute._addFileChildren(
+  CoinsRouteRouteChildren,
+)
 
 interface ItemsRouteRouteChildren {
   ItemsItemIdRoute: typeof ItemsItemIdRoute
@@ -115,6 +179,7 @@ const ItemsRouteRouteWithChildren = ItemsRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CoinsRouteRoute: CoinsRouteRouteWithChildren,
   ItemsRouteRoute: ItemsRouteRouteWithChildren,
   SystemStatusRoute: SystemStatusRoute,
 }
