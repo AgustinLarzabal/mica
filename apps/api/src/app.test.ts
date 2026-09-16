@@ -322,4 +322,91 @@ describe("API", () => {
       )
     })
   })
+
+  describe("GET /v1/coins", () => {
+    it("returns persisted Coins with UTC timestamps and no caching", async () => {
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        listCoins: async () => [
+          {
+            id: "00000000-0000-4000-8000-000000000001",
+            title: "First coin",
+            createdAt: new Date("2026-09-16T10:00:00.000Z"),
+            updatedAt: new Date("2026-09-16T11:00:00.000Z"),
+          },
+        ],
+      }).request("/v1/coins")
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get("cache-control")).toBe("no-store")
+      await expect(response.json()).resolves.toEqual({
+        coins: [
+          {
+            id: "00000000-0000-4000-8000-000000000001",
+            title: "First coin",
+            createdAt: "2026-09-16T10:00:00.000Z",
+            updatedAt: "2026-09-16T11:00:00.000Z",
+          },
+        ],
+      })
+    })
+
+    it("returns an empty catalog", async () => {
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        listCoins: async () => [],
+      }).request("/v1/coins")
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get("cache-control")).toBe("no-store")
+      await expect(response.json()).resolves.toEqual({ coins: [] })
+    })
+
+    it("keeps catalog failures safe and uncacheable", async () => {
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        listCoins: async () => {
+          throw new Error("postgresql://operator:secret@database.internal/mica")
+        },
+      }).request("/v1/coins")
+
+      expect(response.status).toBe(500)
+      expect(response.headers.get("cache-control")).toBe("no-store")
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: "internal_error",
+          message: "Internal server error",
+        },
+      })
+    })
+
+    it("documents named catalog response schemas", async () => {
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+      }).request("/openapi.json")
+      const document = (await response.json()) as {
+        components: { schemas: Record<string, unknown> }
+        paths: {
+          "/v1/coins": { get: { responses: Record<string, unknown> } }
+        }
+      }
+
+      expect(document.paths["/v1/coins"].get.responses).toEqual(
+        expect.objectContaining({
+          "200": expect.any(Object),
+          "500": expect.any(Object),
+        })
+      )
+      expect(document.components.schemas).toEqual(
+        expect.objectContaining({
+          CoinListResponse: expect.any(Object),
+          InternalError: expect.any(Object),
+        })
+      )
+    })
+  })
 })

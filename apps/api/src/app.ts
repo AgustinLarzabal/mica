@@ -3,19 +3,21 @@ import { randomUUID } from "node:crypto"
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi"
 import {
   coinIdSchema,
+  coinListResponseSchema as sharedCoinListResponseSchema,
   coinNotFoundErrorSchema as sharedCoinNotFoundErrorSchema,
   coinResponseSchema,
   internalErrorSchema as sharedInternalErrorSchema,
   invalidCoinIdErrorSchema as sharedInvalidCoinIdErrorSchema,
 } from "@workspace/api"
 import { cors } from "hono/cors"
-import type { CoinResponse } from "@workspace/api"
+import type { CoinListResponse, CoinResponse } from "@workspace/api"
 import type { Coin } from "@workspace/db"
 
 export interface AppOptions {
   allowedOrigins: ReadonlyArray<string>
   checkReadiness: () => Promise<void>
   findCoinById?: (coinId: string) => Promise<Coin | null>
+  listCoins?: () => Promise<Array<Coin>>
   log?: (line: string) => void
 }
 
@@ -37,6 +39,8 @@ const operationalResponseHeaders = {
 }
 
 const coinSchema = coinResponseSchema.openapi("Coin")
+const coinListResponseSchema =
+  sharedCoinListResponseSchema.openapi("CoinListResponse")
 
 const coinPathParametersSchema = z
   .object({
@@ -75,6 +79,23 @@ const coinDetailRoute = createRoute({
     500: {
       content: { "application/json": { schema: internalErrorSchema } },
       description: "The Coin lookup failed unexpectedly",
+      headers: operationalResponseHeaders,
+    },
+  },
+})
+
+const coinListRoute = createRoute({
+  method: "get",
+  path: "/v1/coins",
+  responses: {
+    200: {
+      content: { "application/json": { schema: coinListResponseSchema } },
+      description: "The Coin catalog",
+      headers: operationalResponseHeaders,
+    },
+    500: {
+      content: { "application/json": { schema: internalErrorSchema } },
+      description: "The Coin catalog lookup failed unexpectedly",
       headers: operationalResponseHeaders,
     },
   },
@@ -128,7 +149,12 @@ const readyRoute = createRoute({
 })
 
 const validRequestIdPattern = /^[A-Za-z0-9._:-]{1,128}$/
-const noStorePaths = new Set(["/health", "/openapi.json", "/ready"])
+const noStorePaths = new Set([
+  "/health",
+  "/openapi.json",
+  "/ready",
+  "/v1/coins",
+])
 
 export function createApp(options: AppOptions) {
   const app = new OpenAPIHono()
@@ -194,6 +220,20 @@ export function createApp(options: AppOptions) {
       )
       return context.json({ status: "unavailable" }, 503)
     }
+  })
+
+  app.openapi(coinListRoute, async (context) => {
+    const coins = await (options.listCoins ?? (async () => []))()
+    const response = {
+      coins: coins.map((coin) => ({
+        id: coin.id,
+        title: coin.title,
+        createdAt: coin.createdAt.toISOString(),
+        updatedAt: coin.updatedAt.toISOString(),
+      })),
+    } satisfies CoinListResponse
+
+    return context.json(response, 200)
   })
 
   app.openapi(

@@ -34,6 +34,7 @@ const app = createApp({
   allowedOrigins: config.allowedOrigins,
   checkReadiness: database.checkReadiness,
   findCoinById: database.findCoinById,
+  listCoins: database.listCoins,
 })
 const server = serve(
   {

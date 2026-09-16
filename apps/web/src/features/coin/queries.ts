@@ -1,9 +1,17 @@
 import { queryOptions } from "@tanstack/react-query"
 import { coinIdSchema } from "@workspace/api"
 
-import { getCoin } from "./api-client"
+import { getCoin, getCoins } from "./api-client"
 
 export class InvalidCoinIdError extends Error {}
+
+export function coinCatalogQueryOptions() {
+  return queryOptions({
+    queryKey: ["coins", "catalog"] as const,
+    queryFn: getCoins,
+    staleTime: 30_000,
+  })
+}
 
 export function validateCoinId(coinId: string) {
   if (!coinIdSchema.safeParse(coinId).success) {

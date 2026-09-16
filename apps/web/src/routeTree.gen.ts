@@ -10,20 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SystemStatusRouteImport } from './routes/system-status'
-import { Route as ItemsRouteRouteImport } from './routes/items/route'
 import { Route as CoinsRouteRouteImport } from './routes/coins/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ItemsItemIdRouteImport } from './routes/items/$itemId'
 import { Route as CoinsCoinIdRouteImport } from './routes/coins/$coinId'
 
 const SystemStatusRoute = SystemStatusRouteImport.update({
   id: '/system-status',
   path: '/system-status',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ItemsRouteRoute = ItemsRouteRouteImport.update({
-  id: '/items',
-  path: '/items',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoinsRouteRoute = CoinsRouteRouteImport.update({
@@ -36,11 +29,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ItemsItemIdRoute = ItemsItemIdRouteImport.update({
-  id: '/$itemId',
-  path: '/$itemId',
-  getParentRoute: () => ItemsRouteRoute,
-} as any)
 const CoinsCoinIdRoute = CoinsCoinIdRouteImport.update({
   id: '/$coinId',
   path: '/$coinId',
@@ -50,59 +38,33 @@ const CoinsCoinIdRoute = CoinsCoinIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/coins': typeof CoinsRouteRouteWithChildren
-  '/items': typeof ItemsRouteRouteWithChildren
   '/system-status': typeof SystemStatusRoute
   '/coins/$coinId': typeof CoinsCoinIdRoute
-  '/items/$itemId': typeof ItemsItemIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/coins': typeof CoinsRouteRouteWithChildren
-  '/items': typeof ItemsRouteRouteWithChildren
   '/system-status': typeof SystemStatusRoute
   '/coins/$coinId': typeof CoinsCoinIdRoute
-  '/items/$itemId': typeof ItemsItemIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/coins': typeof CoinsRouteRouteWithChildren
-  '/items': typeof ItemsRouteRouteWithChildren
   '/system-status': typeof SystemStatusRoute
   '/coins/$coinId': typeof CoinsCoinIdRoute
-  '/items/$itemId': typeof ItemsItemIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/coins'
-    | '/items'
-    | '/system-status'
-    | '/coins/$coinId'
-    | '/items/$itemId'
+  fullPaths: '/' | '/coins' | '/system-status' | '/coins/$coinId'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/coins'
-    | '/items'
-    | '/system-status'
-    | '/coins/$coinId'
-    | '/items/$itemId'
-  id:
-    | '__root__'
-    | '/'
-    | '/coins'
-    | '/items'
-    | '/system-status'
-    | '/coins/$coinId'
-    | '/items/$itemId'
+  to: '/' | '/coins' | '/system-status' | '/coins/$coinId'
+  id: '__root__' | '/' | '/coins' | '/system-status' | '/coins/$coinId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CoinsRouteRoute: typeof CoinsRouteRouteWithChildren
-  ItemsRouteRoute: typeof ItemsRouteRouteWithChildren
   SystemStatusRoute: typeof SystemStatusRoute
 }
 
@@ -113,13 +75,6 @@ declare module '@tanstack/react-router' {
       path: '/system-status'
       fullPath: '/system-status'
       preLoaderRoute: typeof SystemStatusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/items': {
-      id: '/items'
-      path: '/items'
-      fullPath: '/items'
-      preLoaderRoute: typeof ItemsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coins': {
@@ -135,13 +90,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/items/$itemId': {
-      id: '/items/$itemId'
-      path: '/$itemId'
-      fullPath: '/items/$itemId'
-      preLoaderRoute: typeof ItemsItemIdRouteImport
-      parentRoute: typeof ItemsRouteRoute
     }
     '/coins/$coinId': {
       id: '/coins/$coinId'
@@ -165,22 +113,9 @@ const CoinsRouteRouteWithChildren = CoinsRouteRoute._addFileChildren(
   CoinsRouteRouteChildren,
 )
 
-interface ItemsRouteRouteChildren {
-  ItemsItemIdRoute: typeof ItemsItemIdRoute
-}
-
-const ItemsRouteRouteChildren: ItemsRouteRouteChildren = {
-  ItemsItemIdRoute: ItemsItemIdRoute,
-}
-
-const ItemsRouteRouteWithChildren = ItemsRouteRoute._addFileChildren(
-  ItemsRouteRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CoinsRouteRoute: CoinsRouteRouteWithChildren,
-  ItemsRouteRoute: ItemsRouteRouteWithChildren,
   SystemStatusRoute: SystemStatusRoute,
 }
 export const routeTree = rootRouteImport

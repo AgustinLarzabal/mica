@@ -1,0 +1,135 @@
+import { createMemoryHistory, RouterProvider } from "@tanstack/react-router"
+import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { getRouter } from "@/router"
+
+vi.mock("@tanstack/react-devtools", () => ({
+  TanStackDevtools: () => null,
+}))
+
+const coinId = "00000000-0000-4000-8000-000000000001"
+const coin = {
+  id: coinId,
+  title: "First coin",
+  createdAt: "2026-09-16T10:00:00.000Z",
+  updatedAt: "2026-09-16T11:00:00.000Z",
+}
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    headers: { "content-type": "application/json" },
+    status,
+  })
+}
+
+function renderCatalogRoute() {
+  const history = createMemoryHistory({ initialEntries: ["/"] })
+  const router = getRouter({ history })
+  render(<RouterProvider router={router} />)
+  return router
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe("Coin catalog route", () => {
+  it("renders one persisted Coin tile with its title and stable UUID", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(jsonResponse({ coins: [coin] }))
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    renderCatalogRoute()
+
+    const link = await screen.findByRole("link", { name: "First coin" })
+    expect(link).toHaveAttribute("href", `/coins/${coinId}`)
+    expect(screen.getByText(coinId)).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("shows the empty archive message", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(jsonResponse({ coins: [] })))
+    )
+
+    renderCatalogRoute()
+
+    expect(
+      await screen.findByText("No coins have been catalogued yet")
+    ).toBeInTheDocument()
+  })
+
+  it("shows loading feedback while the catalog is pending", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => {}))
+    )
+
+    renderCatalogRoute()
+
+    expect(await screen.findByText("Loading coin catalog…")).toBeInTheDocument()
+  })
+
+  it("distinguishes a malformed catalog response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(jsonResponse({ coins: [{ id: coinId }] })))
+    )
+
+    renderCatalogRoute()
+
+    expect(
+      await screen.findByText("Invalid coin catalog response")
+    ).toBeInTheDocument()
+  })
+
+  it("shows request failures", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")))
+
+    renderCatalogRoute()
+
+    expect(
+      await screen.findByText("Unable to load coin catalog")
+    ).toBeInTheDocument()
+  })
+
+  it("shows server failures", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(jsonResponse({ error: {} }, 503)))
+    )
+
+    renderCatalogRoute()
+
+    expect(
+      await screen.findByText("Unable to load coin catalog")
+    ).toBeInTheDocument()
+  })
+
+  it("navigates from a catalog tile to the Coin detail route", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: string | URL | Request) => {
+        const url = String(input)
+        return Promise.resolve(
+          jsonResponse(
+            url.endsWith(`/v1/coins/${coinId}`) ? coin : { coins: [coin] }
+          )
+        )
+      })
+    )
+    const user = userEvent.setup()
+    const router = renderCatalogRoute()
+
+    await user.click(await screen.findByRole("link", { name: "First coin" }))
+
+    expect(
+      await screen.findByRole("heading", { name: "First coin" })
+    ).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe(`/coins/${coinId}`)
+  })
+})

@@ -1,11 +1,40 @@
-import { coinResponseSchema } from "@workspace/api"
-import type { CoinResponse } from "@workspace/api"
+import { coinListResponseSchema, coinResponseSchema } from "@workspace/api"
+import type { CoinListResponse, CoinResponse } from "@workspace/api"
 
 import { API_BASE_URL } from "@/config"
 
 export class CoinNotFoundError extends Error {}
 export class InvalidCoinResponseError extends Error {}
 export class CoinRequestError extends Error {}
+export class InvalidCoinCatalogResponseError extends Error {}
+export class CoinCatalogRequestError extends Error {}
+
+export async function getCoins(): Promise<CoinListResponse> {
+  let response: Response
+
+  try {
+    response = await fetch(`${API_BASE_URL}/v1/coins`)
+  } catch (error) {
+    throw new CoinCatalogRequestError("Coin catalog request failed", {
+      cause: error,
+    })
+  }
+
+  if (!response.ok) {
+    throw new CoinCatalogRequestError(
+      `Coin catalog request failed with HTTP ${response.status}`
+    )
+  }
+
+  try {
+    return coinListResponseSchema.parse(await response.json())
+  } catch (error) {
+    throw new InvalidCoinCatalogResponseError(
+      "Coin catalog response is invalid",
+      { cause: error }
+    )
+  }
+}
 
 export async function getCoin(coinId: string): Promise<CoinResponse> {
   let response: Response

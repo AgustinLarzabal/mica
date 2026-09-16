@@ -11,13 +11,16 @@ export const coinResponseSchema = z.strictObject({
 
 export type CoinResponse = z.infer<typeof coinResponseSchema>
 
+export const coinListResponseSchema = z.strictObject({
+  coins: z.array(coinResponseSchema),
+})
+
+export type CoinListResponse = z.infer<typeof coinListResponseSchema>
+
 function errorResponseSchema<
   const TCode extends string,
   const TMessage extends string,
->(
-  code: TCode,
-  message: TMessage
-) {
+>(code: TCode, message: TMessage) {
   return z.object({
     error: z.object({
       code: z.literal(code),

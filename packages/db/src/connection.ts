@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm"
+import { asc, desc, eq, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
@@ -8,6 +8,7 @@ export interface Database {
   checkReadiness: () => Promise<void>
   close: () => Promise<void>
   findCoinById: (coinId: string) => Promise<Coin | null>
+  listCoins: () => Promise<Array<Coin>>
   orm: ReturnType<typeof drizzle<typeof schema>>
   schema: typeof schema
 }
@@ -37,6 +38,10 @@ export function createDatabase(
       })
       return coin ?? null
     },
+    listCoins: () =>
+      orm.query.coins.findMany({
+        orderBy: [desc(schema.coins.createdAt), asc(schema.coins.id)],
+      }),
     orm,
     schema,
   }

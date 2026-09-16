@@ -32,6 +32,50 @@ beforeEach(async () => {
 })
 
 describe("Coin persistence", () => {
+  it("lists Coins newest-first with UUID order as the deterministic tie-breaker", async () => {
+    const database = createDatabase(getDatabaseUrl())
+    try {
+      const olderId = "00000000-0000-4000-8000-000000000003"
+      const firstTiedId = "00000000-0000-4000-8000-000000000001"
+      const secondTiedId = "00000000-0000-4000-8000-000000000002"
+
+      await database.orm.insert(database.schema.coins).values([
+        {
+          id: olderId,
+          title: "Older coin",
+          createdAt: new Date("2026-09-15T10:00:00.000Z"),
+        },
+        {
+          id: secondTiedId,
+          title: "Second tied coin",
+          createdAt: new Date("2026-09-16T10:00:00.000Z"),
+        },
+        {
+          id: firstTiedId,
+          title: "First tied coin",
+          createdAt: new Date("2026-09-16T10:00:00.000Z"),
+        },
+      ])
+
+      await expect(database.listCoins()).resolves.toEqual([
+        expect.objectContaining({ id: firstTiedId }),
+        expect.objectContaining({ id: secondTiedId }),
+        expect.objectContaining({ id: olderId }),
+      ])
+    } finally {
+      await database.close()
+    }
+  })
+
+  it("lists no Coins from an empty archive", async () => {
+    const database = createDatabase(getDatabaseUrl())
+    try {
+      await expect(database.listCoins()).resolves.toEqual([])
+    } finally {
+      await database.close()
+    }
+  })
+
   it("stores and looks up a Coin with database-owned identity and timestamps", async () => {
     const database = createDatabase(getDatabaseUrl())
     try {
