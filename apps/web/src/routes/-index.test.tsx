@@ -35,7 +35,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("Coin catalog route", () => {
+describe("Coin catalog landing route", () => {
   it("renders one persisted Coin tile with its title and stable UUID", async () => {
     const fetchMock = vi.fn(() =>
       Promise.resolve(jsonResponse({ coins: [coin] }))
