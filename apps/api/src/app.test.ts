@@ -305,10 +305,34 @@ describe("API", () => {
 
       expect(document.paths["/v1/coins/{coinId}"].get.responses).toEqual(
         expect.objectContaining({
-          "200": expect.any(Object),
-          "400": expect.any(Object),
-          "404": expect.any(Object),
-          "500": expect.any(Object),
+          "200": expect.objectContaining({
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Coin" },
+              },
+            },
+          }),
+          "400": expect.objectContaining({
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/InvalidCoinIdError" },
+              },
+            },
+          }),
+          "404": expect.objectContaining({
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CoinNotFoundError" },
+              },
+            },
+          }),
+          "500": expect.objectContaining({
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/InternalError" },
+              },
+            },
+          }),
         })
       )
       expect(document.components.schemas).toEqual(
@@ -397,8 +421,20 @@ describe("API", () => {
 
       expect(document.paths["/v1/coins"].get.responses).toEqual(
         expect.objectContaining({
-          "200": expect.any(Object),
-          "500": expect.any(Object),
+          "200": expect.objectContaining({
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CoinListResponse" },
+              },
+            },
+          }),
+          "500": expect.objectContaining({
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/InternalError" },
+              },
+            },
+          }),
         })
       )
       expect(document.components.schemas).toEqual(
