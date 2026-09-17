@@ -42,6 +42,15 @@ const coinSchema = coinResponseSchema.openapi("Coin")
 const coinListResponseSchema =
   sharedCoinListResponseSchema.openapi("CoinListResponse")
 
+function toCoinResponse(coin: Coin): CoinResponse {
+  return {
+    id: coin.id,
+    title: coin.title,
+    createdAt: coin.createdAt.toISOString(),
+    updatedAt: coin.updatedAt.toISOString(),
+  }
+}
+
 const coinPathParametersSchema = z
   .object({
     coinId: coinIdSchema.openapi({
@@ -225,12 +234,7 @@ export function createApp(options: AppOptions) {
   app.openapi(coinListRoute, async (context) => {
     const coins = await (options.listCoins ?? (async () => []))()
     const response = {
-      coins: coins.map((coin) => ({
-        id: coin.id,
-        title: coin.title,
-        createdAt: coin.createdAt.toISOString(),
-        updatedAt: coin.updatedAt.toISOString(),
-      })),
+      coins: coins.map(toCoinResponse),
     } satisfies CoinListResponse
 
     return context.json(response, 200)
@@ -254,12 +258,7 @@ export function createApp(options: AppOptions) {
         )
       }
 
-      const response = {
-        id: coin.id,
-        title: coin.title,
-        createdAt: coin.createdAt.toISOString(),
-        updatedAt: coin.updatedAt.toISOString(),
-      } satisfies CoinResponse
+      const response = toCoinResponse(coin)
 
       return context.json(response, 200)
     },
