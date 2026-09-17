@@ -55,8 +55,22 @@ DATABASE_URL=postgresql://... pnpm db:generate
 pnpm db:migrate
 ```
 
+To return the local database to its committed migrated and seeded state without
+recreating the container or volume, run the explicit reset command:
+
+```bash
+pnpm db:reset
+```
+
+This permanently removes the existing application schema and prints the target
+database name before doing so. It accepts only database URLs whose parsed host
+is exactly `localhost` or `127.0.0.1`; there is no remote-reset override. The API
+never resets, migrates, or seeds a database during startup.
+
 The real Drizzle/`pg` readiness path has a separate integration command. It
-starts and stops its own local Compose service while retaining its volume:
+starts and stops its own local Compose service while retaining its volume. The
+suite also exercises the complete reset lifecycle against a separate
+`mica_reset_test` database:
 
 ```bash
 pnpm test:db

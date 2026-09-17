@@ -6,6 +6,7 @@
     "build": "turbo build",
     "db:generate": "pnpm --filter @workspace/db db:generate",
     "db:migrate": "pnpm --filter @workspace/db db:migrate",
+    "db:reset": "pnpm --filter @workspace/db db:reset",
     "db:seed": "pnpm --filter @workspace/db db:seed",
     "db:start": "docker compose --env-file .env.local up -d --wait postgres",
     "db:stop": "docker compose --env-file .env.local stop postgres",

@@ -47,7 +47,8 @@ pnpm --filter @workspace/db test
 
 The PostgreSQL integration test is intentionally separate from the ordinary
 test task. It starts a Compose service, exercises readiness through the real
-Drizzle and `pg` boundary, and stops the service without deleting its volume:
+Drizzle and `pg` boundary, and tests the reset lifecycle against a dedicated
+`mica_reset_test` database. It stops the service without deleting its volume:
 
 ```bash
 pnpm test:db
