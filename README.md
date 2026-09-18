@@ -1,6 +1,44 @@
-# shadcn/ui monorepo template
+# Mica
 
-This is a TanStack Start monorepo template with shadcn/ui.
+Mica is an archive for cataloguing coins.
+
+## Getting started
+
+You need Node.js `^22.22.2 || ^24.15.0 || >=26.0.0`, pnpm `10.33.4` through
+Corepack, and Docker for local PostgreSQL and integration tests.
+
+Install dependencies from the repository root:
+
+```bash
+pnpm install
+```
+
+Create the three local environment files and replace example-only values. Do
+not commit real credentials:
+
+```bash
+cp .env.example .env.local
+cp apps/api/.env.example apps/api/.env.local
+cp apps/web/.env.example apps/web/.env.local
+```
+
+Start and initialize the local database:
+
+```bash
+pnpm db:start
+pnpm db:migrate
+pnpm db:seed
+```
+
+Start both development tasks with:
+
+```bash
+pnpm dev
+```
+
+The web application runs on port 3000 and the standalone API runs on port 3001. Browser clients use the API rather than connecting to the database
+package directly. See [ADR 0001](docs/adr/0001-standalone-api-boundary.md)
+for the boundary between client runtimes, the API, and persistence.
 
 ## Testing
 
@@ -22,8 +60,8 @@ conventions, and coverage policy.
 
 ## API
 
-Copy `apps/api/.env.example` to `apps/api/.env.local`, then run the standalone
-Node API from the repository root:
+The first-run setup above creates `apps/api/.env.local`. To run only the
+standalone Node API from the repository root:
 
 ```bash
 pnpm --filter api dev
@@ -35,8 +73,9 @@ its generated contract is available at `GET /openapi.json`.
 
 ## Database
 
-Copy `.env.example` to `.env.local` and replace the example password. Start or
-stop the persistent local PostgreSQL service from the repository root:
+The first-run setup above creates `.env.local`. Replace its example password,
+then start or stop the persistent local PostgreSQL service from the repository
+root:
 
 ```bash
 pnpm db:start
