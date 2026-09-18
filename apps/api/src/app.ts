@@ -21,6 +21,12 @@ export interface AppOptions {
   log?: (line: string) => void
 }
 
+type AppEnvironment = {
+  Variables: {
+    requestId: string
+  }
+}
+
 const healthResponseSchema = z
   .object({
     status: z.literal("ok"),
@@ -166,7 +172,7 @@ const noStorePaths = new Set([
 ])
 
 export function createApp(options: AppOptions) {
-  const app = new OpenAPIHono()
+  const app = new OpenAPIHono<AppEnvironment>()
   const log = options.log ?? console.log
 
   app.openAPIRegistry.register("CoinPathParameters", coinPathParametersSchema)
@@ -179,6 +185,7 @@ export function createApp(options: AppOptions) {
         ? incomingRequestId
         : randomUUID()
 
+    context.set("requestId", requestId)
     await next()
     context.header("x-request-id", requestId)
     log(
@@ -218,13 +225,13 @@ export function createApp(options: AppOptions) {
     try {
       await options.checkReadiness()
       return context.json({ status: "ok" }, 200)
-    } catch (error) {
+    } catch {
       log(
         JSON.stringify({
           timestamp: new Date().toISOString(),
           level: "error",
           event: "readiness_check_failed",
-          error: error instanceof Error ? error.message : String(error),
+          requestId: context.get("requestId"),
         })
       )
       return context.json({ status: "unavailable" }, 503)
@@ -295,6 +302,14 @@ export function createApp(options: AppOptions) {
 
   app.onError((_error, context) => {
     context.header("Cache-Control", "no-store")
+    log(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "error",
+        event: "request_failed",
+        requestId: context.get("requestId"),
+      })
+    )
     return context.json(
       {
         error: {

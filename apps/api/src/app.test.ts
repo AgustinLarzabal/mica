@@ -37,23 +37,45 @@ describe("API", () => {
 
   it("reports safe unavailability while liveness remains healthy", async () => {
     const lines: Array<string> = []
+    const requestId = "readiness-request-42"
+    const dependencyError =
+      "postgresql://operator:fake-secret@database.internal/mica"
     const app = createApp({
       allowedOrigins: ["http://localhost:3000"],
       checkReadiness: async () => {
-        throw new Error("postgresql://operator:secret@database.internal/mica")
+        throw new Error(dependencyError, {
+          cause: new Error("readiness-cause-sentinel"),
+        })
       },
       log: (line) => lines.push(line),
     })
 
-    const readiness = await app.request("/ready")
+    const readiness = await app.request("/ready", {
+      headers: { "x-request-id": requestId },
+    })
     const liveness = await app.request("/health")
     const readinessBody = await readiness.json()
+    const events = lines.map((line) => JSON.parse(line))
+    const readinessFailure = events.find(
+      (event) => event.event === "readiness_check_failed"
+    )
 
     expect(readiness.status).toBe(503)
     expect(readiness.headers.get("cache-control")).toBe("no-store")
     expect(readinessBody).toEqual({ status: "unavailable" })
-    expect(JSON.stringify(readinessBody)).not.toContain("database.internal")
-    expect(lines.some((line) => line.includes("database.internal"))).toBe(true)
+    expect(JSON.stringify(readinessBody)).not.toContain(dependencyError)
+    expect(lines.join("\n")).not.toContain(dependencyError)
+    expect(lines.join("\n")).not.toContain("readiness-cause-sentinel")
+    expect(readinessFailure).toMatchObject({
+      level: "error",
+      event: "readiness_check_failed",
+      requestId,
+    })
+    expect(readinessFailure?.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    expect(readinessFailure).not.toHaveProperty("error")
+    expect(readinessFailure).not.toHaveProperty("message")
+    expect(readinessFailure).not.toHaveProperty("cause")
+    expect(readinessFailure).not.toHaveProperty("stack")
     expect(liveness.status).toBe(200)
     await expect(liveness.json()).resolves.toEqual({ status: "ok" })
   })
@@ -113,16 +135,29 @@ describe("API", () => {
   })
 
   it("returns consistent public JSON errors for unknown routes and failures", async () => {
+    const lines: Array<string> = []
+    const requestId = "unexpected-request-42"
+    const dependencyError =
+      "postgresql://operator:fake-secret@database.internal/mica"
     const app = createApp({
       allowedOrigins: ["https://mica.example"],
       checkReadiness: successfulReadinessCheck,
+      log: (line) => lines.push(line),
     })
     app.get("/unexpected", () => {
-      throw new Error("database password leaked")
+      throw new Error(dependencyError, {
+        cause: new Error("request-cause-sentinel"),
+      })
     })
 
     const notFound = await app.request("/unknown")
-    const unexpected = await app.request("/unexpected")
+    const unexpected = await app.request("/unexpected", {
+      headers: { "x-request-id": requestId },
+    })
+    const events = lines.map((line) => JSON.parse(line))
+    const requestFailure = events.find(
+      (event) => event.event === "request_failed"
+    )
 
     expect(notFound.status).toBe(404)
     await expect(notFound.json()).resolves.toEqual({
@@ -132,7 +167,19 @@ describe("API", () => {
     await expect(unexpected.json()).resolves.toEqual({
       error: { code: "internal_error", message: "Internal server error" },
     })
-    expect(unexpected.headers.get("x-request-id")).toBeTruthy()
+    expect(unexpected.headers.get("x-request-id")).toBe(requestId)
+    expect(lines.join("\n")).not.toContain(dependencyError)
+    expect(lines.join("\n")).not.toContain("request-cause-sentinel")
+    expect(requestFailure).toMatchObject({
+      level: "error",
+      event: "request_failed",
+      requestId,
+    })
+    expect(requestFailure?.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    expect(requestFailure).not.toHaveProperty("error")
+    expect(requestFailure).not.toHaveProperty("message")
+    expect(requestFailure).not.toHaveProperty("cause")
+    expect(requestFailure).not.toHaveProperty("stack")
   })
 
   it("serves a generated OpenAPI contract for operational endpoints", async () => {

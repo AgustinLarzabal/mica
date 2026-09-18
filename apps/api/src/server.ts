@@ -24,10 +24,8 @@ function writeEvent(
 
 const config = loadConfig(process.env)
 const database = createDatabase(config.databaseUrl, {
-  onPoolError: (error) => {
-    writeEvent(console.error, "error", "database_pool_error", {
-      message: error.message,
-    })
+  onPoolError: () => {
+    writeEvent(console.error, "error", "database_pool_error")
   },
 })
 const app = createApp({
@@ -56,20 +54,15 @@ function shutdown(signal: NodeJS.Signals) {
 
   server.close(async (error) => {
     if (error) {
-      writeEvent(console.error, "error", "server_stop_failed", {
-        message: error.message,
-      })
+      writeEvent(console.error, "error", "server_stop_failed")
       process.exitCode = 1
     }
 
     try {
       await database.close()
       writeEvent(console.log, "info", "database_pool_closed")
-    } catch (poolError) {
-      writeEvent(console.error, "error", "database_pool_close_failed", {
-        message:
-          poolError instanceof Error ? poolError.message : String(poolError),
-      })
+    } catch {
+      writeEvent(console.error, "error", "database_pool_close_failed")
       process.exitCode = 1
     }
   })
