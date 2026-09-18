@@ -65,9 +65,10 @@ describe("Coin detail route", () => {
       )
     )
 
-    renderCoinRoute()
+    const router = renderCoinRoute()
 
     expect(await screen.findByText("Coin not found")).toBeInTheDocument()
+    expect(router.state.statusCode).toBe(404)
   })
 
   it("distinguishes malformed success data", async () => {

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, notFound } from "@tanstack/react-router"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 
 import {
@@ -17,8 +17,16 @@ export const Route = createFileRoute("/coins/$coinId")({
   errorComponent: CoinDetailError,
   loader: async ({ context, params }) => {
     const coinId = validateCoinId(params.coinId)
-    await context.queryClient.query(coinDetailQueryOptions(coinId))
+    try {
+      await context.queryClient.query(coinDetailQueryOptions(coinId))
+    } catch (error) {
+      if (error instanceof CoinNotFoundError) {
+        throw notFound()
+      }
+      throw error
+    }
   },
+  notFoundComponent: () => <RouteMessage>Coin not found</RouteMessage>,
   pendingComponent: () => <RouteMessage>Loading coin…</RouteMessage>,
   pendingMs: 0,
 })
@@ -31,9 +39,6 @@ function CoinDetailRoute() {
 function CoinDetailError({ error }: ErrorComponentProps) {
   if (error instanceof InvalidCoinIdError) {
     return <RouteMessage>Invalid coin identifier</RouteMessage>
-  }
-  if (error instanceof CoinNotFoundError) {
-    return <RouteMessage>Coin not found</RouteMessage>
   }
   if (error instanceof InvalidCoinResponseError) {
     return <RouteMessage>Invalid coin response</RouteMessage>
