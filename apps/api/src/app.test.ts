@@ -188,18 +188,41 @@ describe("API", () => {
       checkReadiness: successfulReadinessCheck,
     }).request("/openapi.json")
     const document = (await response.json()) as {
-      components: { schemas: { HealthResponse: unknown } }
+      components: {
+        schemas: {
+          HealthResponse: unknown
+          UnavailableResponse: unknown
+        }
+      }
       openapi: string
       paths: {
         "/health": {
           get: {
             responses: {
-              "200": { headers: Record<string, unknown> }
+              "200": {
+                content: {
+                  "application/json": { schema: unknown }
+                }
+                headers: Record<string, unknown>
+              }
             }
           }
         }
         "/ready": {
-          get: { responses: Record<string, unknown> }
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": { schema: unknown }
+                }
+              }
+              "503": {
+                content: {
+                  "application/json": { schema: unknown }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -225,7 +248,29 @@ describe("API", () => {
       type: "object",
       properties: { status: { type: "string", enum: ["ok"] } },
       required: ["status"],
+      additionalProperties: false,
     })
+    expect(document.components.schemas.UnavailableResponse).toEqual({
+      type: "object",
+      properties: { status: { type: "string", enum: ["unavailable"] } },
+      required: ["status"],
+      additionalProperties: false,
+    })
+    expect(
+      document.paths["/health"].get.responses["200"].content[
+        "application/json"
+      ].schema
+    ).toEqual({ $ref: "#/components/schemas/HealthResponse" })
+    expect(
+      document.paths["/ready"].get.responses["200"].content[
+        "application/json"
+      ].schema
+    ).toEqual({ $ref: "#/components/schemas/HealthResponse" })
+    expect(
+      document.paths["/ready"].get.responses["503"].content[
+        "application/json"
+      ].schema
+    ).toEqual({ $ref: "#/components/schemas/UnavailableResponse" })
   })
 
   it("emits one structured JSON request log", async () => {

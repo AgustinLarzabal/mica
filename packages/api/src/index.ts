@@ -1,5 +1,21 @@
 import { z } from "zod"
 
+export const operationalOkResponseSchema = z.strictObject({
+  status: z.literal("ok"),
+})
+
+export type OperationalOkResponse = z.infer<
+  typeof operationalOkResponseSchema
+>
+
+export const operationalUnavailableResponseSchema = z.strictObject({
+  status: z.literal("unavailable"),
+})
+
+export type OperationalUnavailableResponse = z.infer<
+  typeof operationalUnavailableResponseSchema
+>
+
 export const coinIdSchema = z.uuid()
 
 export const coinResponseSchema = z.strictObject({

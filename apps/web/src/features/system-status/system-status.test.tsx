@@ -84,6 +84,73 @@ describe("System status", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
+  it("reports the API as unavailable when the health response is malformed", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) =>
+        Promise.resolve(
+          String(input).endsWith("/health")
+            ? jsonResponse({ status: "healthy" })
+            : jsonResponse({ status: "ok" })
+        )
+      )
+    )
+
+    renderSystemStatus()
+
+    expect(await screen.findByText("API unavailable")).toBeInTheDocument()
+    expect(
+      screen.getByText("Database status unknown because the API is unavailable")
+    ).toBeInTheDocument()
+    expect(screen.queryByText("API operational")).not.toBeInTheDocument()
+  })
+
+  it("reports an unknown database status when the readiness success response is malformed", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) =>
+        Promise.resolve(
+          String(input).endsWith("/ready")
+            ? jsonResponse({ status: "ready" })
+            : jsonResponse({ status: "ok" })
+        )
+      )
+    )
+
+    renderSystemStatus()
+
+    expect(await screen.findByText("API operational")).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        "Database status unknown because the readiness check failed"
+      )
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Database ready")).not.toBeInTheDocument()
+  })
+
+  it("does not treat a malformed readiness 503 as database unavailability", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) =>
+        Promise.resolve(
+          String(input).endsWith("/ready")
+            ? jsonResponse({ status: "down" }, 503)
+            : jsonResponse({ status: "ok" })
+        )
+      )
+    )
+
+    renderSystemStatus()
+
+    expect(await screen.findByText("API operational")).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        "Database status unknown because the readiness check failed"
+      )
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Database unavailable")).not.toBeInTheDocument()
+  })
+
   it("does not mislabel an unexpected readiness failure as a database outage", async () => {
     vi.stubGlobal(
       "fetch",

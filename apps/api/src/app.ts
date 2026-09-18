@@ -8,6 +8,8 @@ import {
   coinResponseSchema,
   internalErrorSchema as sharedInternalErrorSchema,
   invalidCoinIdErrorSchema as sharedInvalidCoinIdErrorSchema,
+  operationalOkResponseSchema as sharedOperationalOkResponseSchema,
+  operationalUnavailableResponseSchema as sharedOperationalUnavailableResponseSchema,
 } from "@workspace/api"
 import { cors } from "hono/cors"
 import type { CoinListResponse, CoinResponse } from "@workspace/api"
@@ -27,11 +29,8 @@ type AppEnvironment = {
   }
 }
 
-const healthResponseSchema = z
-  .object({
-    status: z.literal("ok"),
-  })
-  .openapi("HealthResponse")
+const healthResponseSchema =
+  sharedOperationalOkResponseSchema.openapi("HealthResponse")
 
 const operationalResponseHeaders = {
   "Cache-Control": {
@@ -132,11 +131,8 @@ const healthRoute = createRoute({
   },
 })
 
-const unavailableResponseSchema = z
-  .object({
-    status: z.literal("unavailable"),
-  })
-  .openapi("UnavailableResponse")
+const unavailableResponseSchema =
+  sharedOperationalUnavailableResponseSchema.openapi("UnavailableResponse")
 
 const readyRoute = createRoute({
   method: "get",
