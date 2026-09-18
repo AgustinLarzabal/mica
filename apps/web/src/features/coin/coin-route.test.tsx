@@ -71,6 +71,33 @@ describe("Coin detail route", () => {
     expect(router.state.statusCode).toBe(404)
   })
 
+  it.each([
+    [
+      "a JSON response with an unrelated error code",
+      () =>
+        jsonResponse(
+          { error: { code: "not_found", message: "Coin not found" } },
+          404
+        ),
+    ],
+    ["an incomplete JSON response", () => jsonResponse({ error: {} }, 404)],
+    [
+      "a non-JSON response",
+      () => new Response("Not found", { status: 404 }),
+    ],
+  ])("rejects %s", async (_description, createResponse) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(createResponse()))
+    )
+
+    const router = renderCoinRoute()
+
+    expect(await screen.findByText("Invalid coin response")).toBeInTheDocument()
+    expect(screen.queryByText("Coin not found")).not.toBeInTheDocument()
+    expect(router.state.statusCode).not.toBe(404)
+  })
+
   it("distinguishes malformed success data", async () => {
     vi.stubGlobal(
       "fetch",

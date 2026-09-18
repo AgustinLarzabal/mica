@@ -1,4 +1,8 @@
-import { coinListResponseSchema, coinResponseSchema } from "@workspace/api"
+import {
+  coinListResponseSchema,
+  coinNotFoundErrorSchema,
+  coinResponseSchema,
+} from "@workspace/api"
 import type { CoinListResponse, CoinResponse } from "@workspace/api"
 
 import { API_BASE_URL } from "@/config"
@@ -46,6 +50,13 @@ export async function getCoin(coinId: string): Promise<CoinResponse> {
   }
 
   if (response.status === 404) {
+    try {
+      coinNotFoundErrorSchema.parse(await response.json())
+    } catch (error) {
+      throw new InvalidCoinResponseError("Coin response is invalid", {
+        cause: error,
+      })
+    }
     throw new CoinNotFoundError("Coin not found")
   }
   if (!response.ok) {
