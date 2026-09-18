@@ -24,9 +24,11 @@ function writeEvent(
 
 const config = loadConfig(process.env)
 const database = createDatabase(config.databaseUrl, {
+  connectionTimeoutMillis: config.databaseConnectionTimeoutMillis,
   onPoolError: () => {
     writeEvent(console.error, "error", "database_pool_error")
   },
+  statementTimeoutMillis: config.databaseStatementTimeoutMillis,
 })
 const app = createApp({
   allowedOrigins: config.allowedOrigins,

@@ -40,6 +40,18 @@ const databaseUrlSchema = z.string().superRefine((value, context) => {
 })
 
 const environmentSchema = z.object({
+  API_DATABASE_CONNECTION_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(120_000)
+    .default(5_000),
+  API_DATABASE_STATEMENT_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(120_000)
+    .default(10_000),
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
   API_ALLOWED_ORIGINS: z
     .string()
@@ -52,6 +64,8 @@ const environmentSchema = z.object({
 
 export interface ApiConfig {
   allowedOrigins: Array<string>
+  databaseConnectionTimeoutMillis: number
+  databaseStatementTimeoutMillis: number
   databaseUrl: string
   port: number
 }
@@ -69,6 +83,10 @@ export function loadConfig(
 
   return {
     allowedOrigins: result.data.API_ALLOWED_ORIGINS,
+    databaseConnectionTimeoutMillis:
+      result.data.API_DATABASE_CONNECTION_TIMEOUT_MS,
+    databaseStatementTimeoutMillis:
+      result.data.API_DATABASE_STATEMENT_TIMEOUT_MS,
     databaseUrl: result.data.DATABASE_URL,
     port: result.data.API_PORT,
   }

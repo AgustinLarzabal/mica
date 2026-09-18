@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { loadConfig } from "./config.js"
 
 describe("API configuration", () => {
-  it("defaults the port and parses explicit allowed origins", () => {
+  it("defaults the port and database timeouts and parses explicit allowed origins", () => {
     expect(
       loadConfig({
         API_ALLOWED_ORIGINS:
@@ -12,9 +12,54 @@ describe("API configuration", () => {
       })
     ).toEqual({
       allowedOrigins: ["http://localhost:3000", "https://preview.mica.example"],
+      databaseConnectionTimeoutMillis: 5_000,
+      databaseStatementTimeoutMillis: 10_000,
       databaseUrl: "postgresql://mica:secret@localhost:5432/mica",
       port: 3001,
     })
+  })
+
+  it("accepts explicit database timeouts", () => {
+    expect(
+      loadConfig({
+        API_ALLOWED_ORIGINS: "http://localhost:3000",
+        API_DATABASE_CONNECTION_TIMEOUT_MS: "2500",
+        API_DATABASE_STATEMENT_TIMEOUT_MS: "7500",
+        DATABASE_URL: "postgresql://mica:secret@localhost:5432/mica",
+      })
+    ).toMatchObject({
+      databaseConnectionTimeoutMillis: 2_500,
+      databaseStatementTimeoutMillis: 7_500,
+    })
+  })
+
+  it.each([
+    ["API_DATABASE_CONNECTION_TIMEOUT_MS", "0"],
+    ["API_DATABASE_CONNECTION_TIMEOUT_MS", "-1"],
+    ["API_DATABASE_CONNECTION_TIMEOUT_MS", "not-a-number"],
+    ["API_DATABASE_CONNECTION_TIMEOUT_MS", "120001"],
+    ["API_DATABASE_STATEMENT_TIMEOUT_MS", "0"],
+    ["API_DATABASE_STATEMENT_TIMEOUT_MS", "-1"],
+    ["API_DATABASE_STATEMENT_TIMEOUT_MS", "not-a-number"],
+    ["API_DATABASE_STATEMENT_TIMEOUT_MS", "120001"],
+  ])("rejects invalid %s values", (name, value) => {
+    expect(() =>
+      loadConfig({
+        API_ALLOWED_ORIGINS: "http://localhost:3000",
+        DATABASE_URL: "postgresql://mica:secret@localhost:5432/mica",
+        [name]: value,
+      })
+    ).toThrow(new RegExp(name))
+
+    try {
+      loadConfig({
+        API_ALLOWED_ORIGINS: "http://localhost:3000",
+        DATABASE_URL: "postgresql://mica:secret@localhost:5432/mica",
+        [name]: value,
+      })
+    } catch (error) {
+      expect(String(error)).not.toContain(value)
+    }
   })
 
   it("rejects invalid ports and wildcard origins with readable diagnostics", () => {

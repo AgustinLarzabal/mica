@@ -16,14 +16,20 @@ export interface Database {
 export type Coin = schema.Coin
 
 export interface DatabaseOptions {
+  connectionTimeoutMillis?: number
   onPoolError?: (error: Error) => void
+  statementTimeoutMillis?: number
 }
 
 export function createDatabase(
   databaseUrl: string,
   options: DatabaseOptions = {}
 ): Database {
-  const pool = new Pool({ connectionString: databaseUrl })
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    connectionTimeoutMillis: options.connectionTimeoutMillis ?? 5_000,
+    statement_timeout: options.statementTimeoutMillis ?? 10_000,
+  })
   pool.on("error", options.onPoolError ?? ((error) => console.error(error)))
   const orm = drizzle({ client: pool, schema })
 
