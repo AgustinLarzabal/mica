@@ -2,7 +2,7 @@ import { asc, desc, eq, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
-import * as schema from "./schema.js"
+import * as schema from "./schema/index.js"
 
 export interface Database {
   checkReadiness: () => Promise<void>

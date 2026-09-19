@@ -6,9 +6,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file-if-exists=../../.env.local --import tsx src/migrate.ts",
-    "db:reset": "node --env-file-if-exists=../../.env.local --import tsx src/run-reset.ts",
-    "db:seed": "node --env-file-if-exists=../../.env.local --import tsx src/run-seed.ts",
+    "db:migrate": "node --env-file-if-exists=../../.env.local --import tsx src/cli/migrate.ts",
+    "db:reset": "node --env-file-if-exists=../../.env.local --import tsx src/cli/reset.ts",
+    "db:seed": "node --env-file-if-exists=../../.env.local --import tsx src/cli/seed.ts",
     "format": "prettier --write \"**/*.{ts,json}\"",
     "lint": "eslint",
     "test": "vitest run src/database-url.test.ts src/reset.test.ts",

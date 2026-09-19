@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises"
 
 import { z } from "zod"
 
-import { coins, coinSeedRecordSchema } from "./schema.js"
+import { coins, coinSeedRecordSchema } from "./schema/index.js"
 import type { Database } from "./connection.js"
 
 const seedDocumentSchema = z.object({

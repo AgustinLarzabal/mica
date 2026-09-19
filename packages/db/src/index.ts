@@ -1,6 +1,6 @@
 export { createDatabase } from "./connection.js"
 export type { Database, DatabaseOptions } from "./connection.js"
-export { coinRecordSchema } from "./schema.js"
-export type { Coin } from "./schema.js"
+export { coinRecordSchema } from "./schema/index.js"
+export type { Coin } from "./schema/index.js"
 export { readCoinSeed, seedCoins } from "./seed.js"
 export type { CoinSeedDocument } from "./seed.js"
