@@ -132,4 +132,15 @@ describe("Coin catalog landing route", () => {
     ).toBeInTheDocument()
     expect(router.state.location.pathname).toBe(`/coins/${coinId}`)
   })
+
+  it("enables view transitions for router navigations", () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => {}))
+    )
+
+    const router = renderCatalogRoute()
+
+    expect(router.options.defaultViewTransition).toBe(true)
+  })
 })

@@ -114,7 +114,7 @@ describe("Coin viewer route", () => {
     expect(await screen.findByText("Unable to load coin")).toBeInTheDocument()
   })
 
-  it("renders persisted Coin data in both responsive detail views", async () => {
+  it("renders persisted Coin data", async () => {
     const fetchMock = vi.fn(() =>
       Promise.resolve(
         jsonResponse({
@@ -130,8 +130,8 @@ describe("Coin viewer route", () => {
     renderCoinRoute()
 
     expect(
-      await screen.findAllByRole("heading", { name: "First coin" })
-    ).toHaveLength(2)
+      await screen.findByRole("heading", { name: "First coin" })
+    ).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

@@ -20,6 +20,7 @@ export function getRouter(options: { history?: RouterHistory } = {}) {
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
+    defaultViewTransition: true,
   })
 
   setupRouterSsrQueryIntegration({ queryClient, router })
