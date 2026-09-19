@@ -9,9 +9,7 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "lint": "eslint",
     "start": "node --env-file-if-exists=.env.local dist/server.js",
-    "pretest": "pnpm --filter @workspace/api build",
     "test": "vitest run",
-    "pretest:watch": "pnpm --filter @workspace/api build",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },

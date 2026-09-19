@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url"
+
 import viteReact from "@vitejs/plugin-react"
 import { defineConfig } from "vitest/config"
 
@@ -6,7 +8,14 @@ import { applicationVersionDefine } from "./application-version"
 export default defineConfig({
   define: applicationVersionDefine,
   plugins: [viteReact()],
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    alias: {
+      "@workspace/api": fileURLToPath(
+        new URL("../../packages/api/src/index.ts", import.meta.url)
+      ),
+    },
+    tsconfigPaths: true,
+  },
   test: {
     coverage: {
       provider: "v8",

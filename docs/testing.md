@@ -39,6 +39,10 @@ pnpm --filter api test
 pnpm --filter api test:watch
 ```
 
+The API and web test configurations resolve `@workspace/api` directly from its
+source, so these commands do not require building the shared contract package
+first.
+
 The database package's deterministic unit tests can be run independently:
 
 ```bash

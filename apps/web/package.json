@@ -9,11 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "pretest": "pnpm --filter @workspace/api build",
     "test": "vitest run",
-    "pretest:coverage": "pnpm --filter @workspace/api build",
     "test:coverage": "vitest run --coverage",
-    "pretest:watch": "pnpm --filter @workspace/api build",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
