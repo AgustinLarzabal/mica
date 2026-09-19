@@ -9,6 +9,7 @@ import appCss from "@workspace/ui/globals.css?url"
 
 import type { RouterContext } from "@/router"
 import { Footer } from "@/components/footer"
+import { NotFound } from "@/components/not-found"
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
@@ -31,12 +32,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
     ],
   }),
-  notFoundComponent: () => (
-    <main className="container mx-auto p-4 pt-16">
-      <h1>404</h1>
-      <p>The requested page could not be found.</p>
-    </main>
-  ),
+  notFoundComponent: NotFound,
   shellComponent: RootDocument,
 })
 
