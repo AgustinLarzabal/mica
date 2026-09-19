@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 import { Header } from "@/components/header"
 import { RouteMessage } from "@/components/route-message"
-import { InvalidCoinCatalogResponseError } from "@/features/coin/api-client"
-import { coinCatalogQueryOptions } from "@/features/coin/queries"
+import { InvalidCoinCatalogResponseError } from "@/features/coin-viewer/api-client"
+import { coinCatalogQueryOptions } from "@/features/coin-viewer/queries"
 import { Explore } from "@/features/explore/explore"
 
 export const Route = createFileRoute("/")({

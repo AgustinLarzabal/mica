@@ -5,13 +5,13 @@ import { RouteMessage } from "@/components/route-message"
 import {
   CoinNotFoundError,
   InvalidCoinResponseError,
-} from "@/features/coin/api-client"
-import { CoinViewer } from "@/features/coin/components/coin-viewer"
+} from "@/features/coin-viewer/api-client"
+import { CoinViewer } from "@/features/coin-viewer/components/coin-viewer"
 import {
   coinDetailQueryOptions,
   InvalidCoinIdError,
   validateCoinId,
-} from "@/features/coin/queries"
+} from "@/features/coin-viewer/queries"
 
 export const Route = createFileRoute("/coins/$coinId")({
   component: CoinViewerRoute,

@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 
 import { ExploreGrid } from "./components/explore-grid"
 import { RouteMessage } from "@/components/route-message"
-import { coinCatalogQueryOptions } from "@/features/coin/queries"
+import { coinCatalogQueryOptions } from "@/features/coin-viewer/queries"
 
 export function Explore() {
   const { data } = useSuspenseQuery(coinCatalogQueryOptions())

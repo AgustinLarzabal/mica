@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router"
-import { CoinViewerHeader } from "@/features/coin/components/coin-viewer-header"
+import { CoinViewerHeader } from "@/features/coin-viewer/components/coin-viewer-header"
 
 export const Route = createFileRoute("/coins")({
   component: RouteComponent,
