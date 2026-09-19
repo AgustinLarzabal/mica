@@ -74,9 +74,9 @@ access. ([TanStack Start: share query options](https://tanstack.com/start/latest
 
 ### Feature components with plain `useQuery`
 
-This preserves the existing system-status pattern and makes loading states
-local, but it is the wrong default for primary route content. With the official
-SSR integration, plain `useQuery` does not execute on the server and fetches
+This makes loading states local, but it is the wrong default for primary route
+content. With the official SSR integration, plain `useQuery` does not execute
+on the server and fetches
 only after hydration. TanStack recommends preloading critical data in the route
 loader to avoid loading flashes and waterfalls and to make it available to
 search engines. `useSuspenseQuery`, by contrast, participates in SSR and can
@@ -84,9 +84,7 @@ read the cache populated by the loader.
 ([TanStack Router Query integration](https://tanstack.com/router/latest/docs/integrations/query#using-usesuspensequery-vs-usequery),
 [TanStack Router: external data loading](https://tanstack.com/router/latest/docs/guide/external-data-loading#using-loaders-to-ensure-data-is-loaded))
 
-Plain `useQuery` remains appropriate for client-only, non-critical data. The
-system-status diagnostics can remain on that pattern because they are not
-catalog content and do not need to be in initial HTML.
+Plain `useQuery` remains appropriate for client-only, non-critical data.
 
 ### Router loaders as the sole data owner
 
@@ -136,4 +134,3 @@ messages without treating all failures as a missing coin.
 | SSR integration | `@tanstack/react-router-ssr-query` |
 | QueryClient lifetime | One per router / SSR request |
 | Loading and errors | Route pending/error boundaries |
-
