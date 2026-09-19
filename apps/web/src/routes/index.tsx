@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 import { Header } from "@/components/header"
+import { RouteMessage } from "@/components/route-message"
 import { InvalidCoinCatalogResponseError } from "@/features/coin/api-client"
 import { coinCatalogQueryOptions } from "@/features/coin/queries"
 import { Explore } from "@/features/explore/explore"
@@ -11,9 +12,7 @@ export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
     await context.queryClient.query(coinCatalogQueryOptions())
   },
-  pendingComponent: () => (
-    <CatalogRouteMessage>Loading coin catalog…</CatalogRouteMessage>
-  ),
+  pendingComponent: () => <RouteMessage>Loading coin catalog…</RouteMessage>,
   pendingMs: 0,
 })
 
@@ -30,18 +29,10 @@ function App() {
 
 function CatalogError({ error }: ErrorComponentProps) {
   return (
-    <CatalogRouteMessage>
+    <RouteMessage>
       {error instanceof InvalidCoinCatalogResponseError
         ? "Invalid coin catalog response"
         : "Unable to load coin catalog"}
-    </CatalogRouteMessage>
-  )
-}
-
-function CatalogRouteMessage({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <p role="status">{children}</p>
-    </main>
+    </RouteMessage>
   )
 }

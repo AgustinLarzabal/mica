@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 
+import { RouteMessage } from "@/components/route-message"
 import {
   CoinNotFoundError,
   InvalidCoinResponseError,
@@ -45,12 +46,4 @@ function CoinViewerError({ error }: ErrorComponentProps) {
   }
 
   return <RouteMessage>Unable to load coin</RouteMessage>
-}
-
-function RouteMessage({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <p role="status">{children}</p>
-    </main>
-  )
 }
