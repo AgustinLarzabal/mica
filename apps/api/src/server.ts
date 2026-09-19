@@ -1,8 +1,13 @@
+import { createServer } from "node:http"
+
 import { serve } from "@hono/node-server"
 import { createDatabase } from "@workspace/db"
 
 import { createApp } from "./app.js"
 import { loadConfig } from "./config.js"
+import { createShutdownHandler } from "./shutdown.js"
+
+const SHUTDOWN_GRACE_PERIOD_MILLIS = 10_000
 
 type LogWriter = (message: string) => void
 
@@ -38,41 +43,31 @@ const app = createApp({
 })
 const server = serve(
   {
+    createServer,
     fetch: app.fetch,
     port: config.port,
   },
   ({ port }) => {
     writeEvent(console.log, "info", "server_started", { port })
   }
-)
+) as ReturnType<typeof createServer>
 
-let shuttingDown = false
-
-function shutdown(signal: NodeJS.Signals) {
-  if (shuttingDown) return
-  shuttingDown = true
-
-  writeEvent(console.log, "info", "server_stopping", { signal })
-
-  server.close(async (error) => {
-    if (error) {
-      writeEvent(console.error, "error", "server_stop_failed")
-      process.exitCode = 1
-    }
-
-    try {
-      await database.close()
-      writeEvent(console.log, "info", "database_pool_closed")
-    } catch {
-      writeEvent(console.error, "error", "database_pool_close_failed")
-      process.exitCode = 1
-    }
-  })
-
-  if ("closeIdleConnections" in server) {
-    server.closeIdleConnections()
-  }
-}
+const shutdown = createShutdownHandler({
+  database,
+  gracePeriodMillis: SHUTDOWN_GRACE_PERIOD_MILLIS,
+  log: (level, event, details) => {
+    writeEvent(
+      level === "error" ? console.error : console.log,
+      level,
+      event,
+      details
+    )
+  },
+  server,
+  setExitCode: (code) => {
+    process.exitCode = code
+  },
+})
 
 process.once("SIGINT", shutdown)
 process.once("SIGTERM", shutdown)
