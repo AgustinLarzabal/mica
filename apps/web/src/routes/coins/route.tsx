@@ -1,18 +1,17 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router"
+import { createFileRoute, Outlet } from "@tanstack/react-router"
+import { CoinViewerHeader } from "@/features/coin/components/coin-viewer-header"
 
 export const Route = createFileRoute("/coins")({
-  component: CoinLayout,
+  component: RouteComponent,
 })
 
-function CoinLayout() {
+function RouteComponent() {
   return (
     <>
-      <header className="flex h-18 items-center border-b px-5 md:px-10">
-        <nav aria-label="Breadcrumb" className="font-mono text-xs uppercase">
-          <Link to="/">Archive</Link> / Coins
-        </nav>
-      </header>
-      <Outlet />
+      <CoinViewerHeader />
+      <main className="flex flex-1">
+        <Outlet />
+      </main>
     </>
   )
 }

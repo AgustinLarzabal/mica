@@ -28,7 +28,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("Coin detail route", () => {
+describe("Coin viewer route", () => {
   it("shows loading feedback while Coin data is pending", async () => {
     vi.stubGlobal(
       "fetch",
@@ -81,10 +81,7 @@ describe("Coin detail route", () => {
         ),
     ],
     ["an incomplete JSON response", () => jsonResponse({ error: {} }, 404)],
-    [
-      "a non-JSON response",
-      () => new Response("Not found", { status: 404 }),
-    ],
+    ["a non-JSON response", () => new Response("Not found", { status: 404 })],
   ])("rejects %s", async (_description, createResponse) => {
     vi.stubGlobal(
       "fetch",
@@ -117,49 +114,24 @@ describe("Coin detail route", () => {
     expect(await screen.findByText("Unable to load coin")).toBeInTheDocument()
   })
 
-  it("renders persisted Coin data and omits a redundant update", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() =>
-        Promise.resolve(
-          jsonResponse({
-            id: coinId,
-            title: "First coin",
-            createdAt: "2026-09-16T10:00:00.000Z",
-            updatedAt: "2026-09-16T10:00:00.000Z",
-          })
-        )
+  it("renders persisted Coin data in both responsive detail views", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        jsonResponse({
+          id: coinId,
+          title: "First coin",
+          createdAt: "2026-09-16T10:00:00.000Z",
+          updatedAt: "2026-09-16T10:00:00.000Z",
+        })
       )
     )
+    vi.stubGlobal("fetch", fetchMock)
 
     renderCoinRoute()
 
     expect(
-      await screen.findByRole("heading", { name: "First coin" })
-    ).toBeInTheDocument()
-    expect(screen.getByText("Added 2026-09-16 10:00 UTC")).toBeInTheDocument()
-    expect(screen.queryByText(/^Updated /)).not.toBeInTheDocument()
-  })
-
-  it("shows modification metadata when it differs", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() =>
-        Promise.resolve(
-          jsonResponse({
-            id: coinId,
-            title: "First coin",
-            createdAt: "2026-09-16T10:00:00.000Z",
-            updatedAt: "2026-09-17T11:30:00.000Z",
-          })
-        )
-      )
-    )
-
-    renderCoinRoute()
-
-    expect(
-      await screen.findByText("Updated 2026-09-17 11:30 UTC")
-    ).toBeInTheDocument()
+      await screen.findAllByRole("heading", { name: "First coin" })
+    ).toHaveLength(2)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })
