@@ -2,17 +2,17 @@ import { createFileRoute } from "@tanstack/react-router"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 import { Header } from "@/components/header"
 import { RouteMessage } from "@/components/route-message"
-import { InvalidCoinCatalogResponseError } from "@/features/coin-viewer/api-client"
-import { coinCatalogQueryOptions } from "@/features/coin-viewer/queries"
+import { InvalidCoinListResponseError } from "@/features/coin-viewer/api-client"
+import { coinListQueryOptions } from "@/features/coin-viewer/queries"
 import { Explore } from "@/features/explore/explore"
 
 export const Route = createFileRoute("/")({
   component: App,
-  errorComponent: CatalogError,
+  errorComponent: CoinListError,
   loader: async ({ context }) => {
-    await context.queryClient.query(coinCatalogQueryOptions())
+    await context.queryClient.query(coinListQueryOptions())
   },
-  pendingComponent: () => <RouteMessage>Loading coin catalog…</RouteMessage>,
+  pendingComponent: () => <RouteMessage>Loading coins…</RouteMessage>,
   pendingMs: 0,
 })
 
@@ -27,12 +27,12 @@ function App() {
   )
 }
 
-function CatalogError({ error }: ErrorComponentProps) {
+function CoinListError({ error }: ErrorComponentProps) {
   return (
     <RouteMessage>
-      {error instanceof InvalidCoinCatalogResponseError
-        ? "Invalid coin catalog response"
-        : "Unable to load coin catalog"}
+      {error instanceof InvalidCoinListResponseError
+        ? "Invalid coin list response"
+        : "Unable to load coins"}
     </RouteMessage>
   )
 }

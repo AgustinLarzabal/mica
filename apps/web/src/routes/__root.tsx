@@ -22,7 +22,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Mica",
+        title: "Coin Archive",
       },
     ],
     links: [
@@ -42,7 +42,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="flex min-h-svh flex-col font-sans antialiased">
+      <body className="flex min-h-svh flex-col overflow-hidden font-sans antialiased">
         {children}
         <Footer />
         <TanStackDevtools

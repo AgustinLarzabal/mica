@@ -1,9 +1,15 @@
-# Mica
+# Coin Archive
 
-Mica is an archive for cataloguing coins.
+Coin Archive is a digital archive of coins.
 
 ## Language
 
+**Archive**:
+The complete collection of coins preserved by Coin Archive.
+
 **Coin**:
-An archive catalog entry representing a coin.
-_Avoid_: Item
+A record representing one coin in the Archive.
+_Avoid_: Item, Catalog entry
+
+**Explore**:
+The experience of browsing the Archive.

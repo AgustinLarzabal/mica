@@ -10,8 +10,8 @@ import { API_BASE_URL } from "@/config"
 export class CoinNotFoundError extends Error {}
 export class InvalidCoinResponseError extends Error {}
 export class CoinRequestError extends Error {}
-export class InvalidCoinCatalogResponseError extends Error {}
-export class CoinCatalogRequestError extends Error {}
+export class InvalidCoinListResponseError extends Error {}
+export class CoinListRequestError extends Error {}
 
 export async function getCoins(): Promise<CoinListResponse> {
   let response: Response
@@ -19,24 +19,23 @@ export async function getCoins(): Promise<CoinListResponse> {
   try {
     response = await fetch(`${API_BASE_URL}/v1/coins`)
   } catch (error) {
-    throw new CoinCatalogRequestError("Coin catalog request failed", {
+    throw new CoinListRequestError("Coin list request failed", {
       cause: error,
     })
   }
 
   if (!response.ok) {
-    throw new CoinCatalogRequestError(
-      `Coin catalog request failed with HTTP ${response.status}`
+    throw new CoinListRequestError(
+      `Coin list request failed with HTTP ${response.status}`
     )
   }
 
   try {
     return coinListResponseSchema.parse(await response.json())
   } catch (error) {
-    throw new InvalidCoinCatalogResponseError(
-      "Coin catalog response is invalid",
-      { cause: error }
-    )
+    throw new InvalidCoinListResponseError("Coin list response is invalid", {
+      cause: error,
+    })
   }
 }
 

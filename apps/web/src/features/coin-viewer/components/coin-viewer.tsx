@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 
 import { coinDetailQueryOptions } from "../queries"
 import { CoinViewerDetails } from "./coin-viewer-detailts"
+import { CoinViewerHeader } from "./coin-viewer-header"
 import { CoinViewerPreview } from "./coin-viewer-preview"
 import { CoinViewerTabs } from "./coin-viewer-tabs"
 
@@ -10,11 +11,14 @@ export function CoinViewer({ coinId }: { coinId: string }) {
 
   return (
     <>
-      <CoinViewerTabs coin={coin} />
-      <div className="hidden flex-1 animate-fade-in lg:flex">
-        <CoinViewerPreview />
-        <CoinViewerDetails coin={coin} />
-      </div>
+      <CoinViewerHeader title={coin.title} />
+      <main className="flex flex-1">
+        <CoinViewerTabs coin={coin} />
+        <div className="hidden flex-1 animate-fade-in lg:flex">
+          <CoinViewerPreview />
+          <CoinViewerDetails coin={coin} />
+        </div>
+      </main>
     </>
   )
 }

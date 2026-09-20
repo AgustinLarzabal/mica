@@ -104,12 +104,12 @@ const coinListRoute = createRoute({
   responses: {
     200: {
       content: { "application/json": { schema: coinListResponseSchema } },
-      description: "The Coin catalog",
+      description: "A list of Coins",
       headers: operationalResponseHeaders,
     },
     500: {
       content: { "application/json": { schema: internalErrorSchema } },
-      description: "The Coin catalog lookup failed unexpectedly",
+      description: "Failed to list Coins",
       headers: operationalResponseHeaders,
     },
   },
@@ -282,7 +282,7 @@ export function createApp(options: AppOptions) {
 
   app.doc("/openapi.json", {
     info: {
-      title: "Mica API",
+      title: "Coin Archive API",
       version: "1.0.0",
     },
     openapi: "3.1.0",

@@ -2,12 +2,12 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import {
-  InvalidCoinCatalogResponseError,
+  InvalidCoinListResponseError,
   InvalidCoinResponseError,
 } from "./api-client"
 import { InvalidCoinIdError } from "./queries"
 import { Route as CoinRoute } from "@/routes/coins/$coinId"
-import { Route as CatalogRoute } from "@/routes/index"
+import { Route as ArchiveRoute } from "@/routes/index"
 import { startInstance } from "@/start"
 
 vi.mock("@tanstack/react-devtools", () => ({
@@ -27,9 +27,9 @@ describe("Coin errors across the SSR serialization boundary", () => {
       message: "Invalid coin response",
     },
     {
-      ErrorType: InvalidCoinCatalogResponseError,
-      route: CatalogRoute,
-      message: "Invalid coin catalog response",
+      ErrorType: InvalidCoinListResponseError,
+      route: ArchiveRoute,
+      message: "Invalid coin list response",
     },
   ])(
     "preserves '$message' after transfer",

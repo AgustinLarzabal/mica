@@ -39,7 +39,7 @@ describe("API", () => {
     const lines: Array<string> = []
     const requestId = "readiness-request-42"
     const dependencyError =
-      "postgresql://operator:fake-secret@database.internal/mica"
+      "postgresql://operator:fake-secret@database.internal/coin_archive"
     const app = createApp({
       allowedOrigins: ["http://localhost:3000"],
       checkReadiness: async () => {
@@ -103,11 +103,11 @@ describe("API", () => {
 
   it("allows only configured browser origins without credentials", async () => {
     const app = createApp({
-      allowedOrigins: ["https://mica.example"],
+      allowedOrigins: ["https://coin-archive.example"],
       checkReadiness: successfulReadinessCheck,
     })
     const allowed = await app.request("/health", {
-      headers: { origin: "https://mica.example" },
+      headers: { origin: "https://coin-archive.example" },
     })
     const unlisted = await app.request("/health", {
       headers: { origin: "https://attacker.example" },
@@ -115,18 +115,18 @@ describe("API", () => {
     const preflight = await app.request("/health", {
       method: "OPTIONS",
       headers: {
-        origin: "https://mica.example",
+        origin: "https://coin-archive.example",
         "access-control-request-method": "GET",
       },
     })
 
     expect(allowed.headers.get("access-control-allow-origin")).toBe(
-      "https://mica.example"
+      "https://coin-archive.example"
     )
     expect(allowed.headers.has("access-control-allow-credentials")).toBe(false)
     expect(unlisted.headers.has("access-control-allow-origin")).toBe(false)
     expect(preflight.headers.get("access-control-allow-origin")).toBe(
-      "https://mica.example"
+      "https://coin-archive.example"
     )
     expect(preflight.headers.has("access-control-allow-credentials")).toBe(
       false
@@ -138,9 +138,9 @@ describe("API", () => {
     const lines: Array<string> = []
     const requestId = "unexpected-request-42"
     const dependencyError =
-      "postgresql://operator:fake-secret@database.internal/mica"
+      "postgresql://operator:fake-secret@database.internal/coin_archive"
     const app = createApp({
-      allowedOrigins: ["https://mica.example"],
+      allowedOrigins: ["https://coin-archive.example"],
       checkReadiness: successfulReadinessCheck,
       log: (line) => lines.push(line),
     })
@@ -257,19 +257,16 @@ describe("API", () => {
       additionalProperties: false,
     })
     expect(
-      document.paths["/health"].get.responses["200"].content[
-        "application/json"
-      ].schema
+      document.paths["/health"].get.responses["200"].content["application/json"]
+        .schema
     ).toEqual({ $ref: "#/components/schemas/HealthResponse" })
     expect(
-      document.paths["/ready"].get.responses["200"].content[
-        "application/json"
-      ].schema
+      document.paths["/ready"].get.responses["200"].content["application/json"]
+        .schema
     ).toEqual({ $ref: "#/components/schemas/HealthResponse" })
     expect(
-      document.paths["/ready"].get.responses["503"].content[
-        "application/json"
-      ].schema
+      document.paths["/ready"].get.responses["503"].content["application/json"]
+        .schema
     ).toEqual({ $ref: "#/components/schemas/UnavailableResponse" })
   })
 
@@ -364,7 +361,9 @@ describe("API", () => {
         allowedOrigins: [],
         checkReadiness: successfulReadinessCheck,
         findCoinById: async () => {
-          throw new Error("postgresql://operator:secret@database.internal/mica")
+          throw new Error(
+            "postgresql://operator:secret@database.internal/coin_archive"
+          )
         },
       }).request(`/v1/coins/${coinId}`, {
         headers: { "x-request-id": "coin-request-42" },
@@ -468,7 +467,7 @@ describe("API", () => {
       })
     })
 
-    it("returns an empty catalog", async () => {
+    it("returns an empty Coin list", async () => {
       const response = await createApp({
         allowedOrigins: [],
         checkReadiness: successfulReadinessCheck,
@@ -480,12 +479,14 @@ describe("API", () => {
       await expect(response.json()).resolves.toEqual({ coins: [] })
     })
 
-    it("keeps catalog failures safe and uncacheable", async () => {
+    it("keeps Coin list failures safe and uncacheable", async () => {
       const response = await createApp({
         allowedOrigins: [],
         checkReadiness: successfulReadinessCheck,
         listCoins: async () => {
-          throw new Error("postgresql://operator:secret@database.internal/mica")
+          throw new Error(
+            "postgresql://operator:secret@database.internal/coin_archive"
+          )
         },
       }).request("/v1/coins")
 
@@ -499,7 +500,7 @@ describe("API", () => {
       })
     })
 
-    it("documents named catalog response schemas", async () => {
+    it("documents named Coin list response schemas", async () => {
       const response = await createApp({
         allowedOrigins: [],
         checkReadiness: successfulReadinessCheck,

@@ -6,7 +6,7 @@ import { Pool } from "pg"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 const execFileAsync = promisify(execFile)
-const RESET_DATABASE_NAME = "mica_reset_test"
+const RESET_DATABASE_NAME = "coin_archive_reset_test"
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url))
 
 function getIntegrationDatabaseUrl() {

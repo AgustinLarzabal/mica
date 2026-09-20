@@ -8,7 +8,7 @@ describe("Header", () => {
     render(<Header />)
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Mica" })
+      screen.getByRole("heading", { level: 1, name: "Coin Archive" })
     ).toBeInTheDocument()
   })
 })

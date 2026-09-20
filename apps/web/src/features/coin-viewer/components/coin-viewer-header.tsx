@@ -8,7 +8,7 @@ import {
   BreadcrumbSeparator,
 } from "@workspace/ui/components/breadcrumb"
 
-export function CoinViewerHeader() {
+export function CoinViewerHeader({ title }: { title: string }) {
   return (
     <header className="flex h-18 items-center border-b px-5 md:px-10">
       <Breadcrumb>
@@ -18,11 +18,7 @@ export function CoinViewerHeader() {
           </BreadcrumbItem>
           <BreadcrumbSeparator>/</BreadcrumbSeparator>
           <BreadcrumbItem>
-            <BreadcrumbLink>Items</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator>/</BreadcrumbSeparator>
-          <BreadcrumbItem>
-            <BreadcrumbPage>Item X</BreadcrumbPage>
+            <BreadcrumbPage>{title}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

@@ -8,11 +8,11 @@ describe("local database reset safety", () => {
     (host) => {
       expect(
         parseLocalResetTarget(
-          `postgresql://mica:secret@${host}:5432/mica_reset_test`
+          `postgresql://coin_archive:secret@${host}:5432/coin_archive_reset_test`
         )
       ).toEqual({
-        databaseName: "mica_reset_test",
-        databaseUrl: `postgresql://mica:secret@${host}:5432/mica_reset_test`,
+        databaseName: "coin_archive_reset_test",
+        databaseUrl: `postgresql://coin_archive:secret@${host}:5432/coin_archive_reset_test`,
       })
     }
   )
@@ -26,7 +26,7 @@ describe("local database reset safety", () => {
   ])("rejects the non-permitted host %s", (host) => {
     expect(() =>
       parseLocalResetTarget(
-        `postgresql://mica:secret@${host}:5432/mica_reset_test`
+        `postgresql://coin_archive:secret@${host}:5432/coin_archive_reset_test`
       )
     ).toThrow("Database reset is permitted only for localhost or 127.0.0.1")
   })
@@ -34,7 +34,7 @@ describe("local database reset safety", () => {
   it("rejects a query parameter that makes pg override the parsed host", () => {
     expect(() =>
       parseLocalResetTarget(
-        "postgresql://mica:secret@localhost:5432/mica_reset_test?host=database.internal"
+        "postgresql://coin_archive:secret@localhost:5432/coin_archive_reset_test?host=database.internal"
       )
     ).toThrow("Database reset is permitted only for localhost or 127.0.0.1")
   })
@@ -43,7 +43,7 @@ describe("local database reset safety", () => {
     undefined,
     "",
     "not a database URL",
-    "https://localhost/mica_reset_test",
+    "https://localhost/coin_archive_reset_test",
     "postgresql://localhost",
   ])("rejects the missing or malformed database URL %j", (databaseUrl) => {
     expect(() => parseLocalResetTarget(databaseUrl)).toThrow(
@@ -53,7 +53,9 @@ describe("local database reset safety", () => {
 
   it("decodes the database name used in the reset warning", () => {
     expect(
-      parseLocalResetTarget("postgresql://mica@localhost/mica%5Freset")
-    ).toMatchObject({ databaseName: "mica_reset" })
+      parseLocalResetTarget(
+        "postgresql://coin_archive@localhost/coin%5Farchive%5Freset"
+      )
+    ).toMatchObject({ databaseName: "coin_archive_reset" })
   })
 })

@@ -5,7 +5,7 @@
 
 ## Context
 
-Mica's web application needs a stable HTTP boundary that can also serve future
+Coin Archive's web application needs a stable HTTP boundary that can also serve future
 mobile clients. Tying that boundary to the web runtime would couple API
 availability and deployment to one client. Giving browser or mobile code direct
 database access would expose credentials and bypass server-side application

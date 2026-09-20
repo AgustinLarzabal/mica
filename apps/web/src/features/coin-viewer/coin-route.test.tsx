@@ -132,6 +132,10 @@ describe("Coin viewer route", () => {
     expect(
       await screen.findByRole("heading", { name: "First coin" })
     ).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "First coin" })).toHaveAttribute(
+      "aria-current",
+      "page"
+    )
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

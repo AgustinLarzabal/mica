@@ -24,7 +24,7 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
-function renderCatalogRoute() {
+function renderArchiveRoute() {
   const history = createMemoryHistory({ initialEntries: ["/"] })
   const router = getRouter({ history })
   render(<RouterProvider router={router} />)
@@ -35,14 +35,14 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("Coin catalog landing route", () => {
+describe("Archive landing route", () => {
   it("renders one persisted Coin tile with its title and stable UUID", async () => {
     const fetchMock = vi.fn(() =>
       Promise.resolve(jsonResponse({ coins: [coin] }))
     )
     vi.stubGlobal("fetch", fetchMock)
 
-    renderCatalogRoute()
+    renderArchiveRoute()
 
     const link = await screen.findByRole("link", { name: "First coin" })
     expect(link).toHaveAttribute("href", `/coins/${coinId}`)
@@ -56,45 +56,43 @@ describe("Coin catalog landing route", () => {
       vi.fn(() => Promise.resolve(jsonResponse({ coins: [] })))
     )
 
-    renderCatalogRoute()
+    renderArchiveRoute()
 
     expect(
-      await screen.findByText("No coins have been catalogued yet")
+      await screen.findByText("No coins have been added to the archive yet")
     ).toBeInTheDocument()
   })
 
-  it("shows loading feedback while the catalog is pending", async () => {
+  it("shows loading feedback while the Coin list is pending", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(() => new Promise(() => {}))
     )
 
-    renderCatalogRoute()
+    renderArchiveRoute()
 
-    expect(await screen.findByText("Loading coin catalog…")).toBeInTheDocument()
+    expect(await screen.findByText("Loading coins…")).toBeInTheDocument()
   })
 
-  it("distinguishes a malformed catalog response", async () => {
+  it("distinguishes a malformed Coin list response", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(() => Promise.resolve(jsonResponse({ coins: [{ id: coinId }] })))
     )
 
-    renderCatalogRoute()
+    renderArchiveRoute()
 
     expect(
-      await screen.findByText("Invalid coin catalog response")
+      await screen.findByText("Invalid coin list response")
     ).toBeInTheDocument()
   })
 
   it("shows request failures", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")))
 
-    renderCatalogRoute()
+    renderArchiveRoute()
 
-    expect(
-      await screen.findByText("Unable to load coin catalog")
-    ).toBeInTheDocument()
+    expect(await screen.findByText("Unable to load coins")).toBeInTheDocument()
   })
 
   it("shows server failures", async () => {
@@ -103,14 +101,12 @@ describe("Coin catalog landing route", () => {
       vi.fn(() => Promise.resolve(jsonResponse({ error: {} }, 503)))
     )
 
-    renderCatalogRoute()
+    renderArchiveRoute()
 
-    expect(
-      await screen.findByText("Unable to load coin catalog")
-    ).toBeInTheDocument()
+    expect(await screen.findByText("Unable to load coins")).toBeInTheDocument()
   })
 
-  it("navigates from a catalog tile to the Coin detail route", async () => {
+  it("navigates from a Coin tile to the Coin detail route", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((input: string | URL | Request) => {
@@ -123,7 +119,7 @@ describe("Coin catalog landing route", () => {
       })
     )
     const user = userEvent.setup()
-    const router = renderCatalogRoute()
+    const router = renderArchiveRoute()
 
     await user.click(await screen.findByRole("link", { name: "First coin" }))
 
@@ -139,7 +135,7 @@ describe("Coin catalog landing route", () => {
       vi.fn(() => new Promise(() => {}))
     )
 
-    const router = renderCatalogRoute()
+    const router = renderArchiveRoute()
 
     expect(router.options.defaultViewTransition).toBe(true)
   })

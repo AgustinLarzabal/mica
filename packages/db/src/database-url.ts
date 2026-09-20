@@ -18,10 +18,10 @@ export function resolveDatabaseUrl(environment: DatabaseEnvironment): string {
   }
 
   const databaseUrl = new URL("postgresql://127.0.0.1")
-  databaseUrl.username = environment.POSTGRES_USER ?? "mica"
+  databaseUrl.username = environment.POSTGRES_USER ?? "coin_archive"
   databaseUrl.password = environment.POSTGRES_PASSWORD
   databaseUrl.port = environment.POSTGRES_PORT ?? "5432"
-  databaseUrl.pathname = environment.POSTGRES_DB ?? "mica"
+  databaseUrl.pathname = environment.POSTGRES_DB ?? "coin_archive"
 
   return databaseUrl.toString()
 }

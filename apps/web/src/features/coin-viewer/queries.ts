@@ -5,9 +5,9 @@ import { getCoin, getCoins } from "./api-client"
 
 export class InvalidCoinIdError extends Error {}
 
-export function coinCatalogQueryOptions() {
+export function coinListQueryOptions() {
   return queryOptions({
-    queryKey: ["coins", "catalog"] as const,
+    queryKey: ["coins", "list"] as const,
     queryFn: getCoins,
     staleTime: 30_000,
   })

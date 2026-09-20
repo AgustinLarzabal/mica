@@ -7,14 +7,19 @@ describe("API configuration", () => {
     expect(
       loadConfig({
         API_ALLOWED_ORIGINS:
-          "http://localhost:3000, https://preview.mica.example",
-        DATABASE_URL: "postgresql://mica:secret@localhost:5432/mica",
+          "http://localhost:3000, https://preview.coin-archive.example",
+        DATABASE_URL:
+          "postgresql://coin_archive:secret@localhost:5432/coin_archive",
       })
     ).toEqual({
-      allowedOrigins: ["http://localhost:3000", "https://preview.mica.example"],
+      allowedOrigins: [
+        "http://localhost:3000",
+        "https://preview.coin-archive.example",
+      ],
       databaseConnectionTimeoutMillis: 5_000,
       databaseStatementTimeoutMillis: 10_000,
-      databaseUrl: "postgresql://mica:secret@localhost:5432/mica",
+      databaseUrl:
+        "postgresql://coin_archive:secret@localhost:5432/coin_archive",
       port: 3001,
     })
   })
@@ -25,7 +30,8 @@ describe("API configuration", () => {
         API_ALLOWED_ORIGINS: "http://localhost:3000",
         API_DATABASE_CONNECTION_TIMEOUT_MS: "2500",
         API_DATABASE_STATEMENT_TIMEOUT_MS: "7500",
-        DATABASE_URL: "postgresql://mica:secret@localhost:5432/mica",
+        DATABASE_URL:
+          "postgresql://coin_archive:secret@localhost:5432/coin_archive",
       })
     ).toMatchObject({
       databaseConnectionTimeoutMillis: 2_500,
@@ -46,7 +52,8 @@ describe("API configuration", () => {
     expect(() =>
       loadConfig({
         API_ALLOWED_ORIGINS: "http://localhost:3000",
-        DATABASE_URL: "postgresql://mica:secret@localhost:5432/mica",
+        DATABASE_URL:
+          "postgresql://coin_archive:secret@localhost:5432/coin_archive",
         [name]: value,
       })
     ).toThrow(new RegExp(name))
@@ -54,7 +61,8 @@ describe("API configuration", () => {
     try {
       loadConfig({
         API_ALLOWED_ORIGINS: "http://localhost:3000",
-        DATABASE_URL: "postgresql://mica:secret@localhost:5432/mica",
+        DATABASE_URL:
+          "postgresql://coin_archive:secret@localhost:5432/coin_archive",
         [name]: value,
       })
     } catch (error) {
@@ -67,13 +75,14 @@ describe("API configuration", () => {
       loadConfig({
         API_ALLOWED_ORIGINS: "*",
         API_PORT: "not-a-port",
-        DATABASE_URL: "mysql://localhost/mica",
+        DATABASE_URL: "mysql://localhost/coin_archive",
       })
     ).toThrow(/API_PORT.*API_ALLOWED_ORIGINS/s)
   })
 
   it("requires a PostgreSQL connection URL without printing its value", () => {
-    const databaseUrl = "postgresql://operator:secret@database.internal/mica"
+    const databaseUrl =
+      "postgresql://operator:secret@database.internal/coin_archive"
 
     expect(() =>
       loadConfig({

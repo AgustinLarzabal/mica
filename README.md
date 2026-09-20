@@ -1,6 +1,6 @@
-# Mica
+# Coin Archive
 
-Mica is an archive for cataloguing coins.
+Coin Archive is a digital archive of coins.
 
 ## Getting started
 
@@ -109,7 +109,7 @@ never resets, migrates, or seeds a database during startup.
 The real Drizzle/`pg` readiness path has a separate integration command. It
 starts and stops its own local Compose service while retaining its volume. The
 suite also exercises the complete reset lifecycle against a separate
-`mica_reset_test` database:
+`coin_archive_reset_test` database:
 
 ```bash
 pnpm test:db
