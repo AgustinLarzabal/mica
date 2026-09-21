@@ -85,12 +85,15 @@ describe("root database reset command", () => {
         id: string
         title: string
       }>("select id, title from coins order by id")
-      expect(coins.rows).toEqual([
-        {
-          id: "00000000-0000-4000-8000-000000000001",
-          title: "First coin",
-        },
-      ])
+      expect(coins.rows).toHaveLength(30)
+      expect(coins.rows[0]).toEqual({
+        id: "00000000-0000-4000-8000-000000000001",
+        title: "First coin",
+      })
+      expect(coins.rows.at(-1)).toEqual({
+        id: "00000000-0000-4000-8000-000000000030",
+        title: "Thirtieth coin",
+      })
     } finally {
       await databaseAfterReset.end()
     }
