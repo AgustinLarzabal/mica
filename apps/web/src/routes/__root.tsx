@@ -3,9 +3,11 @@ import {
   createRootRouteWithContext,
   HeadContent,
   Scripts,
+  useMatchRoute,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import appCss from "@workspace/ui/globals.css?url"
+import { cn } from "@workspace/ui/lib/utils"
 
 import type { RouterContext } from "@/router"
 import { Footer } from "@/components/footer"
@@ -37,12 +39,20 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const matchRoute = useMatchRoute()
+  const isCoinDetailsPage = Boolean(matchRoute({ to: "/coins/$coinId" }))
+
   return (
     <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
-      <body className="flex min-h-svh flex-col overflow-hidden font-sans antialiased">
+      <body
+        className={cn(
+          "flex min-h-svh flex-col font-sans antialiased",
+          isCoinDetailsPage && "overflow-hidden"
+        )}
+      >
         {children}
         <Footer />
         <TanStackDevtools
