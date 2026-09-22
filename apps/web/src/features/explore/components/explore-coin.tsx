@@ -13,8 +13,6 @@ function isIsoIssuerCode(code: string) {
 }
 
 export function ExploreCoin({ className, coin, ...props }: ExploreCoinProps) {
-  console.log("coin", coin)
-
   return (
     <Link
       to="/coins/$coinId"
@@ -26,7 +24,7 @@ export function ExploreCoin({ className, coin, ...props }: ExploreCoinProps) {
       {...props}
     >
       {isIsoIssuerCode(coin.issuer.code) ? (
-        <span className="absolute inset-s-5 top-5 flex items-center gap-2 font-mono text-xs text-muted-foreground">
+        <span className="absolute inset-s-5 top-5 flex items-center gap-2 font-mono text-xs tracking-wider text-muted-foreground">
           <Flag code={coin.issuer.code} width={16} decorative />
           {coin.issuer.name}
         </span>
@@ -35,8 +33,14 @@ export function ExploreCoin({ className, coin, ...props }: ExploreCoinProps) {
           {coin.issuer.name}
         </span>
       )}
-      <img src="/coin-placeholder.webp" className="w-1/2 grayscale" />
-      <span className="absolute right-3 bottom-3 left-3 h-[2lh] text-center font-mono text-xs tracking-wider text-muted-foreground">
+      <span className="absolute inset-e-5 top-5 -translate-y-1.5 font-mono text-xs tracking-wider text-muted-foreground opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100">
+        KM# 1234
+      </span>
+      <img
+        src="/coin-placeholder.webp"
+        className="w-1/2 grayscale group-hover:grayscale-0"
+      />
+      <span className="absolute right-5 bottom-5 left-5 h-[2lh] text-center font-mono text-xs tracking-wider text-muted-foreground">
         {coin.title}
       </span>
     </Link>
