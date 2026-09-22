@@ -5,9 +5,5 @@ export const Route = createFileRoute("/coins")({
 })
 
 function RouteComponent() {
-  return (
-    <>
-      <Outlet />
-    </>
-  )
+  return <Outlet />
 }
