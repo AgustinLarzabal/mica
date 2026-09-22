@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 
 import { coinDetailQueryOptions } from "../queries"
-import { CoinViewerDetails } from "./coin-viewer-detailts"
+import { CoinViewerDetails } from "./coin-viewer-details"
 import { CoinViewerHeader } from "./coin-viewer-header"
 import { CoinViewerPreview } from "./coin-viewer-preview"
 import { CoinViewerTabs } from "./coin-viewer-tabs"

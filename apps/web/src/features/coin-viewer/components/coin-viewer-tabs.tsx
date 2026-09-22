@@ -4,7 +4,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@workspace/ui/components/tabs"
-import { CoinViewerDetails } from "./coin-viewer-detailts"
+import { CoinViewerDetails } from "./coin-viewer-details"
 import { CoinViewerPreview } from "./coin-viewer-preview"
 import type { CoinResponse } from "@workspace/api"
 

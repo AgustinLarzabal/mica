@@ -321,8 +321,8 @@ describe("Coin seed", () => {
         database.findCoinById(SEEDED_COIN_ID)
       ).resolves.toMatchObject({
         id: SEEDED_COIN_ID,
-        title: "First coin",
-        issuer: expect.objectContaining({ name: "Argentina", code: "AR" }),
+        title: "400th Anniversary of the First Edition of Don Quixote",
+        issuer: expect.objectContaining({ name: "Spain", code: "ES" }),
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       })

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router"
+import { Flag } from "@workspace/ui/components/flags/flag"
 import { cn } from "@workspace/ui/lib/utils"
 import type { CoinResponse } from "@workspace/api"
 import type { ComponentProps } from "react"
@@ -7,7 +8,13 @@ type ExploreCoinProps = Omit<ComponentProps<"a">, "children" | "href"> & {
   coin: CoinResponse
 }
 
+function isIsoIssuerCode(code: string) {
+  return /^[A-Z]{2}$/.test(code)
+}
+
 export function ExploreCoin({ className, coin, ...props }: ExploreCoinProps) {
+  console.log("coin", coin)
+
   return (
     <Link
       to="/coins/$coinId"
@@ -18,16 +25,20 @@ export function ExploreCoin({ className, coin, ...props }: ExploreCoinProps) {
       )}
       {...props}
     >
+      {isIsoIssuerCode(coin.issuer.code) ? (
+        <span className="absolute inset-s-5 top-5 flex items-center gap-2 font-mono text-xs text-muted-foreground">
+          <Flag code={coin.issuer.code} width={16} decorative />
+          {coin.issuer.name}
+        </span>
+      ) : (
+        <span className="absolute inset-s-5 top-5 flex items-center gap-2 font-mono text-xs text-muted-foreground">
+          {coin.issuer.name}
+        </span>
+      )}
       <img src="/coin-placeholder.webp" className="w-1/2 grayscale" />
-      <span className="absolute right-3 bottom-3 left-3 translate-y-1.5 text-center font-mono text-xs tracking-wider text-muted-foreground opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100">
+      <span className="absolute right-3 bottom-3 left-3 h-[2lh] text-center font-mono text-xs tracking-wider text-muted-foreground">
         {coin.title}
       </span>
-      {/* <span
-        aria-hidden="true"
-        className="font-mono text-xs break-all text-muted-foreground"
-      >
-        {coin.id}
-      </span> */}
     </Link>
   )
 }

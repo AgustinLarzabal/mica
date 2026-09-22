@@ -88,7 +88,7 @@ describe("root database reset command", () => {
       expect(coins.rows).toHaveLength(30)
       expect(coins.rows[0]).toEqual({
         id: "00000000-0000-4000-8000-000000000001",
-        title: "First coin",
+        title: "400th Anniversary of the First Edition of Don Quixote",
       })
       expect(coins.rows.at(-1)).toEqual({
         id: "00000000-0000-4000-8000-000000000030",
@@ -107,7 +107,7 @@ describe("root database reset command", () => {
       `)
       expect(issuers.rows).toEqual(
         expect.arrayContaining([
-          { name: "Argentina", code: "AR", coin_count: 25 },
+          { name: "Spain", code: "ES", coin_count: 25 },
           { name: "Roman Empire", code: "ROMAN", coin_count: 5 },
         ])
       )
