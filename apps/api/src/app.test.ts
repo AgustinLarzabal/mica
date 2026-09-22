@@ -296,9 +296,18 @@ describe("API", () => {
 
   describe("GET /v1/coins/{coinId}", () => {
     const coinId = "00000000-0000-4000-8000-000000000001"
+    const issuerId = "10000000-0000-4000-8000-000000000001"
     const coin = {
       id: coinId,
       title: "First coin",
+      issuerId,
+      issuer: {
+        id: issuerId,
+        name: "Argentina",
+        code: "AR",
+        createdAt: new Date("2026-09-16T09:00:00.000Z"),
+        updatedAt: new Date("2026-09-16T09:00:00.000Z"),
+      },
       createdAt: new Date("2026-09-16T10:00:00.000Z"),
       updatedAt: new Date("2026-09-16T11:00:00.000Z"),
     }
@@ -315,6 +324,7 @@ describe("API", () => {
       await expect(response.json()).resolves.toEqual({
         id: coinId,
         title: "First coin",
+        issuer: { name: "Argentina", code: "AR" },
         createdAt: "2026-09-16T10:00:00.000Z",
         updatedAt: "2026-09-16T11:00:00.000Z",
       })
@@ -428,7 +438,20 @@ describe("API", () => {
       )
       expect(document.components.schemas).toEqual(
         expect.objectContaining({
-          Coin: expect.any(Object),
+          Coin: expect.objectContaining({
+            properties: expect.objectContaining({
+              issuer: { $ref: "#/components/schemas/Issuer" },
+            }),
+          }),
+          Issuer: {
+            type: "object",
+            properties: {
+              name: { type: "string", minLength: 1, maxLength: 200 },
+              code: { type: "string", pattern: expect.any(String) },
+            },
+            required: ["name", "code"],
+            additionalProperties: false,
+          },
           CoinPathParameters: expect.any(Object),
           InvalidCoinIdError: expect.any(Object),
           CoinNotFoundError: expect.any(Object),
@@ -447,6 +470,14 @@ describe("API", () => {
           {
             id: "00000000-0000-4000-8000-000000000001",
             title: "First coin",
+            issuerId: "10000000-0000-4000-8000-000000000001",
+            issuer: {
+              id: "10000000-0000-4000-8000-000000000001",
+              name: "Argentina",
+              code: "AR",
+              createdAt: new Date("2026-09-16T09:00:00.000Z"),
+              updatedAt: new Date("2026-09-16T09:00:00.000Z"),
+            },
             createdAt: new Date("2026-09-16T10:00:00.000Z"),
             updatedAt: new Date("2026-09-16T11:00:00.000Z"),
           },
@@ -460,6 +491,7 @@ describe("API", () => {
           {
             id: "00000000-0000-4000-8000-000000000001",
             title: "First coin",
+            issuer: { name: "Argentina", code: "AR" },
             createdAt: "2026-09-16T10:00:00.000Z",
             updatedAt: "2026-09-16T11:00:00.000Z",
           },

@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm"
 import { check, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
+
+import { issuers } from "./issuer.js"
 import type { z } from "zod"
 
 export const coins = pgTable(
@@ -8,6 +10,9 @@ export const coins = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     title: varchar({ length: 200 }).notNull(),
+    issuerId: uuid("issuer_id")
+      .notNull()
+      .references(() => issuers.id, { onDelete: "restrict" }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -25,7 +30,10 @@ export const coins = pgTable(
 )
 
 export const coinRecordSchema = createSelectSchema(coins)
-export type Coin = z.infer<typeof coinRecordSchema>
+export type CoinRecord = z.infer<typeof coinRecordSchema>
+
+const varcharIssuerCodeSchema = createInsertSchema(issuers).pick({ code: true })
+  .shape.code
 
 export const coinSeedRecordSchema = createInsertSchema(coins, {
   title: (schema) =>
@@ -33,6 +41,7 @@ export const coinSeedRecordSchema = createInsertSchema(coins, {
       .min(1)
       .refine((title) => title === title.trim(), "Coin title must be trimmed"),
 })
-  .omit({ createdAt: true, updatedAt: true })
+  .omit({ issuerId: true, createdAt: true, updatedAt: true })
+  .extend({ issuerCode: varcharIssuerCodeSchema })
   .required()
   .strict()

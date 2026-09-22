@@ -94,6 +94,20 @@ describe("root database reset command", () => {
         id: "00000000-0000-4000-8000-000000000030",
         title: "Thirtieth coin",
       })
+
+      const issuers = await databaseAfterReset.query<{
+        code: string
+        coin_count: number
+        name: string
+      }>(`
+        select issuers.name, issuers.code, count(coins.id)::integer as coin_count
+        from issuers
+        left join coins on coins.issuer_id = issuers.id
+        group by issuers.id
+      `)
+      expect(issuers.rows).toEqual([
+        { name: "Argentina", code: "AR", coin_count: 30 },
+      ])
     } finally {
       await databaseAfterReset.end()
     }

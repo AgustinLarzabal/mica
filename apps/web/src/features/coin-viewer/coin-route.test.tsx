@@ -120,6 +120,7 @@ describe("Coin viewer route", () => {
         jsonResponse({
           id: coinId,
           title: "First coin",
+          issuer: { name: "Argentina", code: "AR" },
           createdAt: "2026-09-16T10:00:00.000Z",
           updatedAt: "2026-09-16T10:00:00.000Z",
         })
@@ -136,6 +137,11 @@ describe("Coin viewer route", () => {
       "aria-current",
       "page"
     )
+    expect(screen.getByText("Argentina")).toBeInTheDocument()
+    expect(screen.queryByText("Issuer")).not.toBeInTheDocument()
+    const flag = screen.getByAltText("")
+    expect(flag).toHaveAttribute("src", expect.stringMatching(/\/ar\.svg$/))
+    expect(flag).toHaveAttribute("aria-hidden", "true")
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

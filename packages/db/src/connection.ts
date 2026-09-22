@@ -13,7 +13,7 @@ export interface Database {
   schema: typeof schema
 }
 
-export type Coin = schema.Coin
+export type Coin = schema.CoinRecord & { issuer: schema.IssuerRecord }
 
 export interface DatabaseOptions {
   connectionTimeoutMillis?: number
@@ -39,15 +39,23 @@ export function createDatabase(
     },
     close: () => pool.end(),
     async findCoinById(coinId) {
-      const coin = await orm.query.coins.findFirst({
-        where: eq(schema.coins.id, coinId),
-      })
-      return coin ?? null
+      const rows = await orm
+        .select({ coin: schema.coins, issuer: schema.issuers })
+        .from(schema.coins)
+        .innerJoin(schema.issuers, eq(schema.coins.issuerId, schema.issuers.id))
+        .where(eq(schema.coins.id, coinId))
+        .limit(1)
+      const row = rows.at(0)
+      return row ? { ...row.coin, issuer: row.issuer } : null
     },
-    listCoins: () =>
-      orm.query.coins.findMany({
-        orderBy: [desc(schema.coins.createdAt), asc(schema.coins.id)],
-      }),
+    async listCoins() {
+      const rows = await orm
+        .select({ coin: schema.coins, issuer: schema.issuers })
+        .from(schema.coins)
+        .innerJoin(schema.issuers, eq(schema.coins.issuerId, schema.issuers.id))
+        .orderBy(desc(schema.coins.createdAt), asc(schema.coins.id))
+      return rows.map(({ coin, issuer }) => ({ ...coin, issuer }))
+    },
     orm,
     schema,
   }

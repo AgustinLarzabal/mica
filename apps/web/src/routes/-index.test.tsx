@@ -13,6 +13,7 @@ const coinId = "00000000-0000-4000-8000-000000000001"
 const coin = {
   id: coinId,
   title: "First coin",
+  issuer: { name: "Argentina", code: "AR" },
   createdAt: "2026-09-16T10:00:00.000Z",
   updatedAt: "2026-09-16T11:00:00.000Z",
 }
@@ -36,7 +37,7 @@ afterEach(() => {
 })
 
 describe("Archive landing route", () => {
-  it("renders one persisted Coin tile with its title and stable UUID", async () => {
+  it("renders one persisted Coin tile without changing its presentation", async () => {
     const fetchMock = vi.fn(() =>
       Promise.resolve(jsonResponse({ coins: [coin] }))
     )
@@ -46,7 +47,7 @@ describe("Archive landing route", () => {
 
     const link = await screen.findByRole("link", { name: "First coin" })
     expect(link).toHaveAttribute("href", `/coins/${coinId}`)
-    expect(screen.getByText(coinId)).toBeInTheDocument()
+    expect(screen.queryByText(coinId)).not.toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 

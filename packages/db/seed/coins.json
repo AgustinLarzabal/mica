@@ -1,124 +1,155 @@
 {
+  "issuers": [{ "name": "Argentina", "code": "AR" }],
   "coins": [
     {
       "id": "00000000-0000-4000-8000-000000000001",
-      "title": "First coin"
+      "title": "First coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000002",
-      "title": "Second coin"
+      "title": "Second coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000003",
-      "title": "Third coin"
+      "title": "Third coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000004",
-      "title": "Fourth coin"
+      "title": "Fourth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000005",
-      "title": "Fifth coin"
+      "title": "Fifth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000006",
-      "title": "Sixth coin"
+      "title": "Sixth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000007",
-      "title": "Seventh coin"
+      "title": "Seventh coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000008",
-      "title": "Eighth coin"
+      "title": "Eighth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000009",
-      "title": "Ninth coin"
+      "title": "Ninth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000010",
-      "title": "Tenth coin"
+      "title": "Tenth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000011",
-      "title": "Eleventh coin"
+      "title": "Eleventh coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000012",
-      "title": "Twelfth coin"
+      "title": "Twelfth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000013",
-      "title": "Thirteenth coin"
+      "title": "Thirteenth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000014",
-      "title": "Fourteenth coin"
+      "title": "Fourteenth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000015",
-      "title": "Fifteenth coin"
+      "title": "Fifteenth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000016",
-      "title": "Sixteenth coin"
+      "title": "Sixteenth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000017",
-      "title": "Seventeenth coin"
+      "title": "Seventeenth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000018",
-      "title": "Eighteenth coin"
+      "title": "Eighteenth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000019",
-      "title": "Nineteenth coin"
+      "title": "Nineteenth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000020",
-      "title": "Twentieth coin"
+      "title": "Twentieth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000021",
-      "title": "Twenty-first coin"
+      "title": "Twenty-first coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000022",
-      "title": "Twenty-second coin"
+      "title": "Twenty-second coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000023",
-      "title": "Twenty-third coin"
+      "title": "Twenty-third coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000024",
-      "title": "Twenty-fourth coin"
+      "title": "Twenty-fourth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000025",
-      "title": "Twenty-fifth coin"
+      "title": "Twenty-fifth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000026",
-      "title": "Twenty-sixth coin"
+      "title": "Twenty-sixth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000027",
-      "title": "Twenty-seventh coin"
+      "title": "Twenty-seventh coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000028",
-      "title": "Twenty-eighth coin"
+      "title": "Twenty-eighth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000029",
-      "title": "Twenty-ninth coin"
+      "title": "Twenty-ninth coin",
+      "issuerCode": "AR"
     },
     {
       "id": "00000000-0000-4000-8000-000000000030",
-      "title": "Thirtieth coin"
+      "title": "Thirtieth coin",
+      "issuerCode": "AR"
     }
   ]
 }

@@ -1,0 +1,155 @@
+{
+  "id": "d47a62aa-3f60-4944-8658-d3c51ae81379",
+  "prevId": "3f97db91-941a-4ca9-8095-0934d7d74b33",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.coins": {
+      "name": "coins",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "issuer_id": {
+          "name": "issuer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "coins_issuer_id_issuers_id_fk": {
+          "name": "coins_issuer_id_issuers_id_fk",
+          "tableFrom": "coins",
+          "tableTo": "issuers",
+          "columnsFrom": [
+            "issuer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "coins_title_not_empty": {
+          "name": "coins_title_not_empty",
+          "value": "length(\"coins\".\"title\") >= 1"
+        },
+        "coins_title_trimmed": {
+          "name": "coins_title_trimmed",
+          "value": "\"coins\".\"title\" !~ '^[[:space:]]|[[:space:]]$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.issuers": {
+      "name": "issuers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(12)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "issuers_code_unique": {
+          "name": "issuers_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "issuers_name_not_empty": {
+          "name": "issuers_name_not_empty",
+          "value": "length(\"issuers\".\"name\") >= 1"
+        },
+        "issuers_name_trimmed": {
+          "name": "issuers_name_trimmed",
+          "value": "\"issuers\".\"name\" !~ '^[[:space:]]|[[:space:]]$'"
+        },
+        "issuers_code_format": {
+          "name": "issuers_code_format",
+          "value": "\"issuers\".\"code\" ~ '^(?:[A-Z]{2}|[A-Z0-9-]{3,12})$'"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -8,6 +8,7 @@ import {
   coinResponseSchema,
   internalErrorSchema as sharedInternalErrorSchema,
   invalidCoinIdErrorSchema as sharedInvalidCoinIdErrorSchema,
+  issuerResponseSchema,
   operationalOkResponseSchema as sharedOperationalOkResponseSchema,
   operationalUnavailableResponseSchema as sharedOperationalUnavailableResponseSchema,
 } from "@workspace/api"
@@ -43,7 +44,10 @@ const operationalResponseHeaders = {
   },
 }
 
-const coinSchema = coinResponseSchema.openapi("Coin")
+const issuerSchema = issuerResponseSchema.openapi("Issuer")
+const coinSchema = coinResponseSchema
+  .extend({ issuer: issuerSchema })
+  .openapi("Coin")
 const coinListResponseSchema =
   sharedCoinListResponseSchema.openapi("CoinListResponse")
 
@@ -51,6 +55,7 @@ function toCoinResponse(coin: Coin): CoinResponse {
   return {
     id: coin.id,
     title: coin.title,
+    issuer: { name: coin.issuer.name, code: coin.issuer.code },
     createdAt: coin.createdAt.toISOString(),
     updatedAt: coin.updatedAt.toISOString(),
   }
