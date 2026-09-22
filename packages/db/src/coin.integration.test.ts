@@ -394,6 +394,53 @@ describe("Coin seed", () => {
     }
   )
 
+  it.each([
+    [
+      "an unknown Coin relationship",
+      {
+        issuers: validSeed.issuers,
+        coins: [{ ...validSeed.coins[0], issuerCode: "UY" }],
+      },
+    ],
+    [
+      "a duplicate Issuer Code",
+      {
+        issuers: [
+          ...validSeed.issuers,
+          { name: "Argentine Republic", code: "AR" },
+        ],
+        coins: validSeed.coins,
+      },
+    ],
+  ])("validates %s before attempting writes", async (_case, seed) => {
+    const database = createDatabase(getDatabaseUrl())
+    try {
+      await database.orm.execute(sql`create sequence issuer_write_attempts`)
+      await database.orm.execute(sql`
+        create function record_issuer_write_attempt() returns trigger as $$
+        begin
+          perform nextval('issuer_write_attempts');
+          return new;
+        end;
+        $$ language plpgsql
+      `)
+      await database.orm.execute(sql`
+        create trigger record_issuer_write_attempt
+        before insert on issuers
+        for each row execute function record_issuer_write_attempt()
+      `)
+
+      await expect(seedCoins(database, seed)).rejects.toThrow()
+
+      const result = await database.orm.execute<{ is_called: boolean }>(sql`
+        select is_called from issuer_write_attempts
+      `)
+      expect(result.rows).toEqual([{ is_called: false }])
+    } finally {
+      await database.close()
+    }
+  })
+
   it("rolls back all records when any insert fails", async () => {
     const database = createDatabase(getDatabaseUrl())
     try {

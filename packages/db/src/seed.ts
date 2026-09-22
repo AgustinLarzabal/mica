@@ -16,6 +16,30 @@ const seedDocumentSchema = z
     coins: z.array(coinSeedRecordSchema),
   })
   .strict()
+  .superRefine((document, context) => {
+    const issuerCodes = new Set<string>()
+
+    document.issuers.forEach((issuer, index) => {
+      if (issuerCodes.has(issuer.code)) {
+        context.addIssue({
+          code: "custom",
+          message: `Duplicate Issuer Code: ${issuer.code}`,
+          path: ["issuers", index, "code"],
+        })
+      }
+      issuerCodes.add(issuer.code)
+    })
+
+    document.coins.forEach((coin, index) => {
+      if (!issuerCodes.has(coin.issuerCode)) {
+        context.addIssue({
+          code: "custom",
+          message: `Coin references unknown Issuer Code: ${coin.issuerCode}`,
+          path: ["coins", index, "issuerCode"],
+        })
+      }
+    })
+  })
 
 export type CoinSeedDocument = z.infer<typeof seedDocumentSchema>
 

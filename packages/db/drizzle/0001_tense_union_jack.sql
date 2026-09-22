@@ -23,12 +23,5 @@ FOR EACH ROW
 EXECUTE FUNCTION set_issuer_updated_at();
 --> statement-breakpoint
 ALTER TABLE "coins" ADD COLUMN "issuer_id" uuid;--> statement-breakpoint
-INSERT INTO "issuers" ("name", "code")
-SELECT 'Argentina', 'AR'
-WHERE EXISTS (SELECT 1 FROM "coins");
---> statement-breakpoint
-UPDATE "coins"
-SET "issuer_id" = (SELECT "id" FROM "issuers" WHERE "code" = 'AR');
---> statement-breakpoint
 ALTER TABLE "coins" ALTER COLUMN "issuer_id" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "coins" ADD CONSTRAINT "coins_issuer_id_issuers_id_fk" FOREIGN KEY ("issuer_id") REFERENCES "public"."issuers"("id") ON DELETE restrict ON UPDATE no action;
