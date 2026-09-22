@@ -163,7 +163,7 @@ describe("Coin viewer route", () => {
 
     expect(await screen.findByText("Roman Empire")).toBeInTheDocument()
     expect(screen.queryByText("ROMAN")).not.toBeInTheDocument()
-    expect(document.querySelector('[data-slot="flag"]')).not.toBeInTheDocument()
+    expect(screen.queryByAltText("")).not.toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

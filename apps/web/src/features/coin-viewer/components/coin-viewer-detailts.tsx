@@ -1,6 +1,10 @@
 import { Flag } from "@workspace/ui/components/flags/flag"
 import type { CoinResponse } from "@workspace/api"
 
+function isIsoIssuerCode(code: string) {
+  return /^[A-Z]{2}$/.test(code)
+}
+
 export function CoinViewerDetails({ coin }: { coin: CoinResponse }) {
   return (
     <aside className="flex-1 border-l bg-sidebar">
@@ -8,7 +12,7 @@ export function CoinViewerDetails({ coin }: { coin: CoinResponse }) {
         <h2 className="mb-4 font-mono text-base">{coin.title}</h2>
         <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            {coin.issuer.code.length === 2 && (
+            {isIsoIssuerCode(coin.issuer.code) && (
               <Flag code={coin.issuer.code} width={16} decorative />
             )}
             <span>{coin.issuer.name}</span>
