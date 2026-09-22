@@ -6,7 +6,7 @@ import {
   InvalidCoinResponseError,
 } from "./api-client"
 import { InvalidCoinIdError } from "./queries"
-import { Route as CoinRoute } from "@/routes/coins/$coinId"
+import { Route as CoinRoute } from "@/routes/coins.$coinId"
 import { Route as ArchiveRoute } from "@/routes/index"
 import { startInstance } from "@/start"
 

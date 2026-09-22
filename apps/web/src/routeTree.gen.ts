@@ -9,64 +9,48 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as CoinsRouteRouteImport } from './routes/coins/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as CoinsCoinIdRouteImport } from './routes/coins/$coinId'
+import { Route as CoinsCoinIdRouteImport } from './routes/coins.$coinId'
 
-const CoinsRouteRoute = CoinsRouteRouteImport.update({
-  id: '/coins',
-  path: '/coins',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoinsCoinIdRoute = CoinsCoinIdRouteImport.update({
-  id: '/$coinId',
-  path: '/$coinId',
-  getParentRoute: () => CoinsRouteRoute,
+  id: '/coins/$coinId',
+  path: '/coins/$coinId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/coins': typeof CoinsRouteRouteWithChildren
   '/coins/$coinId': typeof CoinsCoinIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/coins': typeof CoinsRouteRouteWithChildren
   '/coins/$coinId': typeof CoinsCoinIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/coins': typeof CoinsRouteRouteWithChildren
   '/coins/$coinId': typeof CoinsCoinIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/coins' | '/coins/$coinId'
+  fullPaths: '/' | '/coins/$coinId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/coins' | '/coins/$coinId'
-  id: '__root__' | '/' | '/coins' | '/coins/$coinId'
+  to: '/' | '/coins/$coinId'
+  id: '__root__' | '/' | '/coins/$coinId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CoinsRouteRoute: typeof CoinsRouteRouteWithChildren
+  CoinsCoinIdRoute: typeof CoinsCoinIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/coins': {
-      id: '/coins'
-      path: '/coins'
-      fullPath: '/coins'
-      preLoaderRoute: typeof CoinsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -76,29 +60,17 @@ declare module '@tanstack/react-router' {
     }
     '/coins/$coinId': {
       id: '/coins/$coinId'
-      path: '/$coinId'
+      path: '/coins/$coinId'
       fullPath: '/coins/$coinId'
       preLoaderRoute: typeof CoinsCoinIdRouteImport
-      parentRoute: typeof CoinsRouteRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface CoinsRouteRouteChildren {
-  CoinsCoinIdRoute: typeof CoinsCoinIdRoute
-}
-
-const CoinsRouteRouteChildren: CoinsRouteRouteChildren = {
-  CoinsCoinIdRoute: CoinsCoinIdRoute,
-}
-
-const CoinsRouteRouteWithChildren = CoinsRouteRoute._addFileChildren(
-  CoinsRouteRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CoinsRouteRoute: CoinsRouteRouteWithChildren,
+  CoinsCoinIdRoute: CoinsCoinIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
