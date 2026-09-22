@@ -105,9 +105,13 @@ describe("root database reset command", () => {
         left join coins on coins.issuer_id = issuers.id
         group by issuers.id
       `)
-      expect(issuers.rows).toEqual([
-        { name: "Argentina", code: "AR", coin_count: 30 },
-      ])
+      expect(issuers.rows).toEqual(
+        expect.arrayContaining([
+          { name: "Argentina", code: "AR", coin_count: 25 },
+          { name: "Roman Empire", code: "ROMAN", coin_count: 5 },
+        ])
+      )
+      expect(issuers.rows).toHaveLength(2)
     } finally {
       await databaseAfterReset.end()
     }

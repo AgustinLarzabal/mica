@@ -144,4 +144,26 @@ describe("Coin viewer route", () => {
     expect(flag).toHaveAttribute("aria-hidden", "true")
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
+
+  it("renders an Archive-defined Issuer without a flag or visible Issuer Code", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        jsonResponse({
+          id: coinId,
+          title: "Roman coin",
+          issuer: { name: "Roman Empire", code: "ROMAN" },
+          createdAt: "2026-09-16T10:00:00.000Z",
+          updatedAt: "2026-09-16T10:00:00.000Z",
+        })
+      )
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    renderCoinRoute()
+
+    expect(await screen.findByText("Roman Empire")).toBeInTheDocument()
+    expect(screen.queryByText("ROMAN")).not.toBeInTheDocument()
+    expect(document.querySelector('[data-slot="flag"]')).not.toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
 })

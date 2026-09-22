@@ -1,5 +1,8 @@
 {
-  "issuers": [{ "name": "Argentina", "code": "AR" }],
+  "issuers": [
+    { "name": "Argentina", "code": "AR" },
+    { "name": "Roman Empire", "code": "ROMAN" }
+  ],
   "coins": [
     {
       "id": "00000000-0000-4000-8000-000000000001",
@@ -129,27 +132,27 @@
     {
       "id": "00000000-0000-4000-8000-000000000026",
       "title": "Twenty-sixth coin",
-      "issuerCode": "AR"
+      "issuerCode": "ROMAN"
     },
     {
       "id": "00000000-0000-4000-8000-000000000027",
       "title": "Twenty-seventh coin",
-      "issuerCode": "AR"
+      "issuerCode": "ROMAN"
     },
     {
       "id": "00000000-0000-4000-8000-000000000028",
       "title": "Twenty-eighth coin",
-      "issuerCode": "AR"
+      "issuerCode": "ROMAN"
     },
     {
       "id": "00000000-0000-4000-8000-000000000029",
       "title": "Twenty-ninth coin",
-      "issuerCode": "AR"
+      "issuerCode": "ROMAN"
     },
     {
       "id": "00000000-0000-4000-8000-000000000030",
       "title": "Thirtieth coin",
-      "issuerCode": "AR"
+      "issuerCode": "ROMAN"
     }
   ]
 }

@@ -326,6 +326,15 @@ describe("Coin seed", () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       })
+      await expect(
+        database.findCoinById("00000000-0000-4000-8000-000000000030")
+      ).resolves.toMatchObject({
+        id: "00000000-0000-4000-8000-000000000030",
+        issuer: expect.objectContaining({
+          name: "Roman Empire",
+          code: "ROMAN",
+        }),
+      })
     } finally {
       await database.close()
     }

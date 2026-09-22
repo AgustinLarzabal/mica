@@ -330,6 +330,38 @@ describe("API", () => {
       })
     })
 
+    it("returns an Archive-defined Issuer from detail and list endpoints without internal IDs", async () => {
+      const romanCoin = {
+        ...coin,
+        issuer: {
+          ...coin.issuer,
+          name: "Roman Empire",
+          code: "ROMAN",
+        },
+      }
+      const app = createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        findCoinById: async () => romanCoin,
+        listCoins: async () => [romanCoin],
+      })
+
+      const detail = await app.request(`/v1/coins/${coinId}`)
+      const list = await app.request("/v1/coins")
+      const expectedCoin = {
+        id: coinId,
+        title: "First coin",
+        issuer: { name: "Roman Empire", code: "ROMAN" },
+        createdAt: "2026-09-16T10:00:00.000Z",
+        updatedAt: "2026-09-16T11:00:00.000Z",
+      }
+
+      expect(detail.status).toBe(200)
+      await expect(detail.json()).resolves.toEqual(expectedCoin)
+      expect(list.status).toBe(200)
+      await expect(list.json()).resolves.toEqual({ coins: [expectedCoin] })
+    })
+
     it("rejects malformed IDs before lookup", async () => {
       let lookupCount = 0
       const response = await createApp({

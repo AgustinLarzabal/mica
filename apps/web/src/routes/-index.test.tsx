@@ -37,19 +37,26 @@ afterEach(() => {
 })
 
 describe("Archive landing route", () => {
-  it("renders one persisted Coin tile without changing its presentation", async () => {
-    const fetchMock = vi.fn(() =>
-      Promise.resolve(jsonResponse({ coins: [coin] }))
-    )
-    vi.stubGlobal("fetch", fetchMock)
+  it.each([
+    ["ISO", { name: "Argentina", code: "AR" }],
+    ["Archive-defined", { name: "Roman Empire", code: "ROMAN" }],
+  ])(
+    "renders one %s Issuer's persisted Coin tile without changing its presentation",
+    async (_category, issuer) => {
+      const fetchMock = vi.fn(() =>
+        Promise.resolve(jsonResponse({ coins: [{ ...coin, issuer }] }))
+      )
+      vi.stubGlobal("fetch", fetchMock)
 
-    renderArchiveRoute()
+      renderArchiveRoute()
 
-    const link = await screen.findByRole("link", { name: "First coin" })
-    expect(link).toHaveAttribute("href", `/coins/${coinId}`)
-    expect(screen.queryByText(coinId)).not.toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-  })
+      const link = await screen.findByRole("link", { name: "First coin" })
+      expect(link).toHaveAttribute("href", `/coins/${coinId}`)
+      expect(screen.queryByText(coinId)).not.toBeInTheDocument()
+      expect(screen.queryByText(issuer.name)).not.toBeInTheDocument()
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    }
+  )
 
   it("shows the empty archive message", async () => {
     vi.stubGlobal(

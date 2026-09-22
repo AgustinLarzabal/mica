@@ -8,7 +8,9 @@ export function CoinViewerDetails({ coin }: { coin: CoinResponse }) {
         <h2 className="mb-4 font-mono text-base">{coin.title}</h2>
         <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Flag code={coin.issuer.code} width={16} decorative />
+            {coin.issuer.code.length === 2 && (
+              <Flag code={coin.issuer.code} width={16} decorative />
+            )}
             <span>{coin.issuer.name}</span>
           </div>
           <span>•</span>
