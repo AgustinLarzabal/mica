@@ -5,6 +5,7 @@
   "scripts": {
     "predev": "pnpm --filter @workspace/api build",
     "dev": "vite dev --port 3000",
+    "dev:staging": "vite dev --port 3000",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint",

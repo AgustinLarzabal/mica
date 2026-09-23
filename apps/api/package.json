@@ -6,6 +6,7 @@
     "build": "tsc -p tsconfig.build.json",
     "predev": "pnpm --filter @workspace/api build && pnpm --filter @workspace/db build",
     "dev": "node --env-file-if-exists=.env.local --import tsx --watch src/server.ts",
+    "dev:staging": "sh scripts/run-with-staging-environment.sh",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "lint": "eslint",
     "start": "node --env-file-if-exists=.env.local dist/server.js",

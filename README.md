@@ -40,6 +40,10 @@ The web application runs on port 3000 and the standalone API runs on port 3001. 
 package directly. See [ADR 0001](docs/adr/0001-standalone-api-boundary.md)
 for the boundary between client runtimes, the API, and persistence.
 
+To run the same local processes while the API connects to the personal Neon
+Staging Database, follow the [Neon staging workflow](docs/neon-staging.md) and
+use `pnpm dev:staging`.
+
 ## Testing
 
 Run the deterministic test suite from the repository root:
@@ -107,6 +111,10 @@ is exactly `localhost` or `127.0.0.1`; there is no remote-reset override. The AP
 never resets, migrates, or seeds a database during startup.
 
 ### Neon staging database maintenance
+
+See the [complete Neon staging workflow](docs/neon-staging.md) for initial
+setup, pooled-versus-direct URL placement, local staging development, manual
+dummy Coin data, recovery, and the manual smoke test.
 
 The personal staging database is the Neon project's default branch. Create its
 private root environment file from the committed example, then replace the
