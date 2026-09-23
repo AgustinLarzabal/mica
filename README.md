@@ -106,6 +106,45 @@ database name before doing so. It accepts only database URLs whose parsed host
 is exactly `localhost` or `127.0.0.1`; there is no remote-reset override. The API
 never resets, migrates, or seeds a database during startup.
 
+### Neon staging database maintenance
+
+The personal staging database is the Neon project's default branch. Create its
+private root environment file from the committed example, then replace the
+placeholder with the branch's **direct (unpooled)** connection string from
+Neon. The pooled application connection string does not belong in this file.
+
+```bash
+cp .env.staging.example .env.staging.local
+```
+
+The private `.env.staging.local` file is ignored by Git. Apply all checked-in
+migrations and transactionally load the committed Issuer and Coin seed data
+with the dedicated commands:
+
+```bash
+pnpm db:migrate:staging
+pnpm db:seed:staging
+```
+
+Staging seed is intentionally non-idempotent and is meant for an empty,
+migrated database. If committed or manually entered records conflict, it fails
+and rolls back instead of updating or overwriting them.
+
+To completely rebuild the configured database from the checked-in migrations
+and seed data, run:
+
+```bash
+pnpm db:reset:staging
+```
+
+**Warning:** this command immediately drops the configured `public` application
+schema and Drizzle migration-history schema. It does not prompt, require a
+confirmation token, validate the hostname, or verify that the URL identifies a
+Neon default branch. Manually inspect the direct URL in `.env.staging.local`
+before every destructive reset; an incorrect URL can destroy the wrong
+database. Ordinary `db:migrate`, `db:seed`, and loopback-only `db:reset`
+continue to use `.env.local`.
+
 The real Drizzle/`pg` readiness path has a separate integration command. It
 starts and stops its own local Compose service while retaining its volume. The
 suite also exercises the complete reset lifecycle against a separate

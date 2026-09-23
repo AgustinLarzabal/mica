@@ -6,6 +6,7 @@ coverage
 *.local
 .env*
 !**/.env.example
+!**/.env.staging.example
 .tanstack
 .wrangler
 .output
