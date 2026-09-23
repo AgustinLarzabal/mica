@@ -68,7 +68,11 @@ export async function resetLocalDatabase(databaseUrl: string | undefined) {
     `Resetting local database ${JSON.stringify(target.databaseName)} before migrating and seeding.`
   )
 
-  const database = createDatabase(target.databaseUrl)
+  await rebuildDatabase(target.databaseUrl)
+}
+
+export async function rebuildDatabase(databaseUrl: string) {
+  const database = createDatabase(databaseUrl)
 
   try {
     await database.orm.execute(sql`drop schema if exists drizzle cascade`)

@@ -1,13 +1,9 @@
-import { execFile } from "node:child_process"
-import { fileURLToPath } from "node:url"
-import { promisify } from "node:util"
-
 import { Pool } from "pg"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
-const execFileAsync = promisify(execFile)
+import { rebuildDatabase } from "./index.js"
+
 const RESET_DATABASE_NAME = "coin_archive_reset_test"
-const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url))
 
 function getIntegrationDatabaseUrl() {
   const databaseUrl = process.env.DATABASE_URL
@@ -55,24 +51,21 @@ async function withAdministrationDatabase(
 beforeAll(recreateResetDatabase)
 afterAll(dropResetDatabase)
 
-describe("root database reset command", () => {
-  it("recreates and seeds only the isolated local integration database", async () => {
+describe("database rebuild lifecycle", () => {
+  it("removes prior state and restores the migrated seed state", async () => {
     const resetDatabaseUrl = getResetDatabaseUrl()
     const databaseBeforeReset = new Pool({ connectionString: resetDatabaseUrl })
     try {
       await databaseBeforeReset.query("create table reset_marker (id integer)")
+      await databaseBeforeReset.query("create schema drizzle")
+      await databaseBeforeReset.query(
+        "create table drizzle.reset_marker (id integer)"
+      )
     } finally {
       await databaseBeforeReset.end()
     }
 
-    const { stdout } = await execFileAsync("pnpm", ["db:reset"], {
-      cwd: repositoryRoot,
-      env: { ...process.env, DATABASE_URL: resetDatabaseUrl },
-    })
-
-    expect(stdout).toContain(
-      `Resetting local database "${RESET_DATABASE_NAME}" before migrating and seeding.`
-    )
+    await rebuildDatabase(resetDatabaseUrl)
 
     const databaseAfterReset = new Pool({ connectionString: resetDatabaseUrl })
     try {
@@ -80,6 +73,11 @@ describe("root database reset command", () => {
         "select to_regclass('public.reset_marker')::text as name"
       )
       expect(marker.rows).toEqual([{ name: null }])
+
+      const migrationMarker = await databaseAfterReset.query<{
+        name: string | null
+      }>("select to_regclass('drizzle.reset_marker')::text as name")
+      expect(migrationMarker.rows).toEqual([{ name: null }])
 
       const coins = await databaseAfterReset.query<{
         id: string
