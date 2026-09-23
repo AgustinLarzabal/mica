@@ -1,9 +1,12 @@
+import { fileURLToPath } from "node:url"
+
 import { Pool } from "pg"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { rebuildDatabase } from "./index.js"
 
 const RESET_DATABASE_NAME = "coin_archive_reset_test"
+const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url))
 
 function getIntegrationDatabaseUrl() {
   const databaseUrl = process.env.DATABASE_URL
@@ -65,7 +68,13 @@ describe("database rebuild lifecycle", () => {
       await databaseBeforeReset.end()
     }
 
-    await rebuildDatabase(resetDatabaseUrl)
+    const initialWorkingDirectory = process.cwd()
+    process.chdir(repositoryRoot)
+    try {
+      await rebuildDatabase(resetDatabaseUrl)
+    } finally {
+      process.chdir(initialWorkingDirectory)
+    }
 
     const databaseAfterReset = new Pool({ connectionString: resetDatabaseUrl })
     try {

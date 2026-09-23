@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url"
+
 import { sql } from "drizzle-orm"
 import { migrate } from "drizzle-orm/node-postgres/migrator"
 
@@ -8,6 +10,7 @@ const INVALID_DATABASE_URL_MESSAGE =
   "A valid local PostgreSQL DATABASE_URL with a database name is required"
 
 const PERMITTED_RESET_HOSTS = new Set(["localhost", "127.0.0.1"])
+const migrationsFolder = fileURLToPath(new URL("../drizzle", import.meta.url))
 
 export interface LocalResetTarget {
   databaseName: string
@@ -78,7 +81,7 @@ export async function rebuildDatabase(databaseUrl: string) {
     await database.orm.execute(sql`drop schema if exists drizzle cascade`)
     await database.orm.execute(sql`drop schema if exists public cascade`)
     await database.orm.execute(sql`create schema public`)
-    await migrate(database.orm, { migrationsFolder: "drizzle" })
+    await migrate(database.orm, { migrationsFolder })
     await seedCoins(database, await readCoinSeed())
   } finally {
     await database.close()
