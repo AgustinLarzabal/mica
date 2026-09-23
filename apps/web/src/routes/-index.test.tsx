@@ -30,7 +30,7 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
-function archiveResponse(coins: Array<typeof coin> = [coin]) {
+function createArchiveFetch(coins: Array<typeof coin> = [coin]) {
   return (input: string | URL | Request) =>
     Promise.resolve(
       String(input).endsWith("/v1/issuers")
@@ -89,7 +89,7 @@ describe("Archive landing route", () => {
   })
 
   it("lists every Issuer in API order and navigates through URL state", async () => {
-    const fetchMock = vi.fn(archiveResponse())
+    const fetchMock = vi.fn(createArchiveFetch())
     vi.stubGlobal("fetch", fetchMock)
     const user = userEvent.setup()
     const router = renderArchiveRoute()
@@ -126,7 +126,7 @@ describe("Archive landing route", () => {
   })
 
   it("names a known selected Issuer when it has no Coins", async () => {
-    vi.stubGlobal("fetch", vi.fn(archiveResponse([])))
+    vi.stubGlobal("fetch", vi.fn(createArchiveFetch([])))
 
     renderArchiveRoute("/?issuer=AR")
 
@@ -137,7 +137,7 @@ describe("Archive landing route", () => {
   })
 
   it("keeps the populated select available when the URL Issuer is unknown", async () => {
-    vi.stubGlobal("fetch", vi.fn(archiveResponse([])))
+    vi.stubGlobal("fetch", vi.fn(createArchiveFetch([])))
 
     renderArchiveRoute("/?issuer=ZZ")
 
@@ -150,7 +150,7 @@ describe("Archive landing route", () => {
   })
 
   it("keeps filtered and unfiltered Coin collections distinct", async () => {
-    const fetchMock = vi.fn(archiveResponse())
+    const fetchMock = vi.fn(createArchiveFetch())
     vi.stubGlobal("fetch", fetchMock)
     const router = renderArchiveRoute("/?issuer=AR")
     await screen.findByRole("link", { name: "First coin" })
@@ -187,7 +187,7 @@ describe("Archive landing route", () => {
   ])(
     "renders one %s Issuer's persisted Coin tile",
     async (_category, issuer) => {
-      const fetchMock = vi.fn(archiveResponse([{ ...coin, issuer }]))
+      const fetchMock = vi.fn(createArchiveFetch([{ ...coin, issuer }]))
       vi.stubGlobal("fetch", fetchMock)
 
       renderArchiveRoute()
@@ -201,7 +201,7 @@ describe("Archive landing route", () => {
   )
 
   it("shows the empty archive message", async () => {
-    vi.stubGlobal("fetch", vi.fn(archiveResponse([])))
+    vi.stubGlobal("fetch", vi.fn(createArchiveFetch([])))
 
     renderArchiveRoute()
 
