@@ -3,6 +3,7 @@ import { createSerializationAdapter } from "@tanstack/react-router"
 import {
   InvalidCoinListResponseError,
   InvalidCoinResponseError,
+  InvalidIssuerListResponseError,
 } from "./api-client"
 import { InvalidCoinIdError, InvalidIssuerCodeError } from "./queries"
 
@@ -20,5 +21,9 @@ export const coinErrorSerializationAdapters = [
   errorAdapter("InvalidCoinIdError", InvalidCoinIdError),
   errorAdapter("InvalidCoinResponseError", InvalidCoinResponseError),
   errorAdapter("InvalidCoinListResponseError", InvalidCoinListResponseError),
+  errorAdapter(
+    "InvalidIssuerListResponseError",
+    InvalidIssuerListResponseError
+  ),
   errorAdapter("InvalidIssuerCodeError", InvalidIssuerCodeError),
 ]

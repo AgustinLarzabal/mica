@@ -40,6 +40,7 @@ const app = createApp({
   checkReadiness: database.checkReadiness,
   findCoinById: database.findCoinById,
   listCoins: database.listCoins,
+  listIssuers: database.listIssuers,
 })
 const server = serve(
   {

@@ -2,8 +2,13 @@ import {
   coinListResponseSchema,
   coinNotFoundErrorSchema,
   coinResponseSchema,
+  issuerListResponseSchema,
 } from "@workspace/api"
-import type { CoinListResponse, CoinResponse } from "@workspace/api"
+import type {
+  CoinListResponse,
+  CoinResponse,
+  IssuerListResponse,
+} from "@workspace/api"
 
 import { API_BASE_URL } from "@/config"
 
@@ -12,6 +17,35 @@ export class InvalidCoinResponseError extends Error {}
 export class CoinRequestError extends Error {}
 export class InvalidCoinListResponseError extends Error {}
 export class CoinListRequestError extends Error {}
+export class InvalidIssuerListResponseError extends Error {}
+export class IssuerListRequestError extends Error {}
+
+export async function getIssuers(): Promise<IssuerListResponse> {
+  let response: Response
+
+  try {
+    response = await fetch(`${API_BASE_URL}/v1/issuers`)
+  } catch (error) {
+    throw new IssuerListRequestError("Issuer list request failed", {
+      cause: error,
+    })
+  }
+
+  if (!response.ok) {
+    throw new IssuerListRequestError(
+      `Issuer list request failed with HTTP ${response.status}`
+    )
+  }
+
+  try {
+    return issuerListResponseSchema.parse(await response.json())
+  } catch (error) {
+    throw new InvalidIssuerListResponseError(
+      "Issuer list response is invalid",
+      { cause: error }
+    )
+  }
+}
 
 export async function getCoins(issuerCode?: string): Promise<CoinListResponse> {
   let response: Response

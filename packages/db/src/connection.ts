@@ -9,6 +9,7 @@ export interface Database {
   close: () => Promise<void>
   findCoinById: (coinId: string) => Promise<Coin | null>
   listCoins: (options?: CoinListOptions) => Promise<Array<Coin>>
+  listIssuers: () => Promise<Array<schema.IssuerRecord>>
   orm: ReturnType<typeof drizzle<typeof schema>>
   schema: typeof schema
 }
@@ -65,6 +66,11 @@ export function createDatabase(
         .orderBy(desc(schema.coins.createdAt), asc(schema.coins.id))
       return rows.map(({ coin, issuer }) => ({ ...coin, issuer }))
     },
+    listIssuers: () =>
+      orm
+        .select()
+        .from(schema.issuers)
+        .orderBy(asc(schema.issuers.name), asc(schema.issuers.code)),
     orm,
     schema,
   }

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 import {
   InvalidCoinListResponseError,
   InvalidCoinResponseError,
+  InvalidIssuerListResponseError,
 } from "./api-client"
 import { InvalidCoinIdError, InvalidIssuerCodeError } from "./queries"
 import { Route as CoinRoute } from "@/routes/coins.$coinId"
@@ -30,6 +31,11 @@ describe("Coin errors across the SSR serialization boundary", () => {
       ErrorType: InvalidCoinListResponseError,
       route: ArchiveRoute,
       message: "Invalid coin list response",
+    },
+    {
+      ErrorType: InvalidIssuerListResponseError,
+      route: ArchiveRoute,
+      message: "Invalid issuer list response",
     },
     {
       ErrorType: InvalidIssuerCodeError,

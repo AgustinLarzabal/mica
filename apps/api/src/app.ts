@@ -10,19 +10,25 @@ import {
   invalidCoinIdErrorSchema as sharedInvalidCoinIdErrorSchema,
   invalidIssuerCodeErrorSchema as sharedInvalidIssuerCodeErrorSchema,
   issuerCodeSchema,
+  issuerListResponseSchema as sharedIssuerListResponseSchema,
   issuerResponseSchema,
   operationalOkResponseSchema as sharedOperationalOkResponseSchema,
   operationalUnavailableResponseSchema as sharedOperationalUnavailableResponseSchema,
 } from "@workspace/api"
 import { cors } from "hono/cors"
-import type { CoinListResponse, CoinResponse } from "@workspace/api"
-import type { Coin, CoinListOptions } from "@workspace/db"
+import type {
+  CoinListResponse,
+  CoinResponse,
+  IssuerListResponse,
+} from "@workspace/api"
+import type { Coin, CoinListOptions, IssuerRecord } from "@workspace/db"
 
 export interface AppOptions {
   allowedOrigins: ReadonlyArray<string>
   checkReadiness: () => Promise<void>
   findCoinById?: (coinId: string) => Promise<Coin | null>
   listCoins?: (options?: CoinListOptions) => Promise<Array<Coin>>
+  listIssuers?: () => Promise<Array<IssuerRecord>>
   log?: (line: string) => void
 }
 
@@ -52,6 +58,8 @@ const coinSchema = coinResponseSchema
   .openapi("Coin")
 const coinListResponseSchema =
   sharedCoinListResponseSchema.openapi("CoinListResponse")
+const issuerListResponseSchema =
+  sharedIssuerListResponseSchema.openapi("IssuerListResponse")
 
 const coinListQuerySchema = z.object({
   issuer: issuerCodeSchema.optional().openapi({
@@ -138,6 +146,23 @@ const coinListRoute = createRoute({
   },
 })
 
+const issuerListRoute = createRoute({
+  method: "get",
+  path: "/v1/issuers",
+  responses: {
+    200: {
+      content: { "application/json": { schema: issuerListResponseSchema } },
+      description: "A list of Issuers",
+      headers: operationalResponseHeaders,
+    },
+    500: {
+      content: { "application/json": { schema: internalErrorSchema } },
+      description: "Failed to list Issuers",
+      headers: operationalResponseHeaders,
+    },
+  },
+})
+
 const healthRoute = createRoute({
   method: "get",
   path: "/health",
@@ -188,6 +213,7 @@ const noStorePaths = new Set([
   "/openapi.json",
   "/ready",
   "/v1/coins",
+  "/v1/issuers",
 ])
 
 export function createApp(options: AppOptions) {
@@ -322,6 +348,15 @@ export function createApp(options: AppOptions) {
       }
     }
   )
+
+  app.openapi(issuerListRoute, async (context) => {
+    const issuers = await (options.listIssuers ?? (async () => []))()
+    const response = {
+      issuers: issuers.map(({ name, code }) => ({ name, code })),
+    } satisfies IssuerListResponse
+
+    return context.json(response, 200)
+  })
 
   app.doc("/openapi.json", {
     info: {

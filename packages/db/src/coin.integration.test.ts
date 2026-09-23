@@ -253,6 +253,28 @@ describe("Coin persistence", () => {
 })
 
 describe("Issuer persistence", () => {
+  it("lists every Issuer by name and then Issuer Code, including Issuers without Coins", async () => {
+    const database = createDatabase(getDatabaseUrl())
+    try {
+      const argentina = await insertArgentina(database)
+      await database.orm.insert(database.schema.issuers).values([
+        { name: "Roman Empire", code: "ROMAN" },
+        { name: "Argentina", code: "ARG-HIST" },
+      ])
+      await database.orm
+        .insert(database.schema.coins)
+        .values({ title: "First coin", issuerId: argentina.id })
+
+      await expect(database.listIssuers()).resolves.toEqual([
+        expect.objectContaining({ name: "Argentina", code: "AR" }),
+        expect.objectContaining({ name: "Argentina", code: "ARG-HIST" }),
+        expect.objectContaining({ name: "Roman Empire", code: "ROMAN" }),
+      ])
+    } finally {
+      await database.close()
+    }
+  })
+
   it("stores reusable Issuers with database-owned identity and timestamps", async () => {
     const database = createDatabase(getDatabaseUrl())
     try {

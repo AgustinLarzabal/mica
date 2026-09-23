@@ -1,5 +1,5 @@
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router"
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -17,12 +17,26 @@ const coin = {
   createdAt: "2026-09-16T10:00:00.000Z",
   updatedAt: "2026-09-16T11:00:00.000Z",
 }
+const issuers = [
+  { name: "Argentina", code: "AR" },
+  { name: "Roman Empire", code: "ROMAN" },
+  { name: "Uruguay", code: "UY" },
+]
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     headers: { "content-type": "application/json" },
     status,
   })
+}
+
+function archiveResponse(coins: Array<typeof coin> = [coin]) {
+  return (input: string | URL | Request) =>
+    Promise.resolve(
+      String(input).endsWith("/v1/issuers")
+        ? jsonResponse({ issuers })
+        : jsonResponse({ coins })
+    )
 }
 
 function renderArchiveRoute(initialEntry = "/") {
@@ -37,42 +51,114 @@ afterEach(() => {
 })
 
 describe("Archive landing route", () => {
-  it("requests the filtered Coin collection when opened with an Issuer Code", async () => {
-    const fetchMock = vi.fn(() =>
-      Promise.resolve(jsonResponse({ coins: [coin] }))
+  it("loads Coins and Issuers concurrently and keeps loading until both are ready", async () => {
+    let resolveCoins!: (response: Response) => void
+    let resolveIssuers!: (response: Response) => void
+    const coinsResponse = new Promise<Response>((resolve) => {
+      resolveCoins = resolve
+    })
+    const issuersResponse = new Promise<Response>((resolve) => {
+      resolveIssuers = resolve
+    })
+    const fetchMock = vi.fn((input: string | URL | Request) =>
+      String(input).endsWith("/v1/issuers") ? issuersResponse : coinsResponse
     )
     vi.stubGlobal("fetch", fetchMock)
 
     const router = renderArchiveRoute("/?issuer=AR")
 
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3001/v1/coins?issuer=AR"
+    )
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3001/v1/issuers")
+    expect(screen.getByText("Loading coins…")).toBeVisible()
+
+    resolveCoins(jsonResponse({ coins: [coin] }))
+    await Promise.resolve()
+    expect(screen.getByText("Loading coins…")).toBeVisible()
+
+    resolveIssuers(
+      jsonResponse({ issuers: [{ name: "Argentina", code: "AR" }] })
+    )
     expect(
       await screen.findByRole("link", { name: "First coin" })
     ).toBeVisible()
-    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
-      "http://localhost:3001/v1/coins?issuer=AR"
-    )
+    expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveValue("AR")
     expect(router.state.location.searchStr).toBe("?issuer=AR")
   })
 
-  it("keeps filtered and unfiltered Coin collections distinct", async () => {
-    const fetchMock = vi.fn(() =>
-      Promise.resolve(jsonResponse({ coins: [coin] }))
+  it("lists every Issuer in API order and navigates through URL state", async () => {
+    const fetchMock = vi.fn(archiveResponse())
+    vi.stubGlobal("fetch", fetchMock)
+    const user = userEvent.setup()
+    const router = renderArchiveRoute()
+    const select = await screen.findByRole("combobox", { name: "Issuer" })
+
+    expect(
+      screen.getAllByRole("option").map((option) => option.textContent)
+    ).toEqual(["All issuers", "Argentina", "Roman Empire", "Uruguay"])
+
+    await user.selectOptions(select, "ROMAN")
+
+    await waitFor(() =>
+      expect(router.state.location.searchStr).toBe("?issuer=ROMAN")
     )
+    expect(select).toHaveValue("ROMAN")
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3001/v1/coins?issuer=ROMAN"
+    )
+
+    await user.selectOptions(select, "")
+
+    await waitFor(() => expect(router.state.location.searchStr).toBe(""))
+    expect(select).toHaveValue("")
+
+    router.history.back()
+    await waitFor(() =>
+      expect(router.state.location.searchStr).toBe("?issuer=ROMAN")
+    )
+    expect(select).toHaveValue("ROMAN")
+
+    router.history.forward()
+    await waitFor(() => expect(router.state.location.searchStr).toBe(""))
+    expect(select).toHaveValue("")
+  })
+
+  it("names a known selected Issuer when it has no Coins", async () => {
+    vi.stubGlobal("fetch", vi.fn(archiveResponse([])))
+
+    renderArchiveRoute("/?issuer=AR")
+
+    expect(
+      await screen.findByText("No coins found for Argentina")
+    ).toBeVisible()
+    expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveValue("AR")
+  })
+
+  it("keeps the populated select available when the URL Issuer is unknown", async () => {
+    vi.stubGlobal("fetch", vi.fn(archiveResponse([])))
+
+    renderArchiveRoute("/?issuer=ZZ")
+
+    expect(await screen.findByText("Issuer not found")).toBeVisible()
+    expect(screen.getByRole("combobox", { name: "Issuer" })).toBeVisible()
+    expect(screen.getAllByRole("option")).toHaveLength(4)
+  })
+
+  it("keeps filtered and unfiltered Coin collections distinct", async () => {
+    const fetchMock = vi.fn(archiveResponse())
     vi.stubGlobal("fetch", fetchMock)
     const router = renderArchiveRoute("/?issuer=AR")
     await screen.findByRole("link", { name: "First coin" })
 
     await router.navigate({ to: "/", search: {} })
 
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
+    expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:3001/v1/coins?issuer=AR"
     )
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      "http://localhost:3001/v1/coins"
-    )
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3001/v1/coins")
+    expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
   it.each(["", "ar", "A", "ABC_123"])(
@@ -98,9 +184,7 @@ describe("Archive landing route", () => {
   ])(
     "renders one %s Issuer's persisted Coin tile",
     async (_category, issuer) => {
-      const fetchMock = vi.fn(() =>
-        Promise.resolve(jsonResponse({ coins: [{ ...coin, issuer }] }))
-      )
+      const fetchMock = vi.fn(archiveResponse([{ ...coin, issuer }]))
       vi.stubGlobal("fetch", fetchMock)
 
       renderArchiveRoute()
@@ -108,16 +192,13 @@ describe("Archive landing route", () => {
       const link = await screen.findByRole("link", { name: "First coin" })
       expect(link).toHaveAttribute("href", `/coins/${coinId}`)
       expect(screen.queryByText(coinId)).not.toBeInTheDocument()
-      expect(screen.getByText(issuer.name)).toBeInTheDocument()
-      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(screen.getAllByText(issuer.name).length).toBeGreaterThan(0)
+      expect(fetchMock).toHaveBeenCalledTimes(2)
     }
   )
 
   it("shows the empty archive message", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.resolve(jsonResponse({ coins: [] })))
-    )
+    vi.stubGlobal("fetch", vi.fn(archiveResponse([])))
 
     renderArchiveRoute()
 
@@ -140,7 +221,13 @@ describe("Archive landing route", () => {
   it("distinguishes a malformed Coin list response", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(() => Promise.resolve(jsonResponse({ coins: [{ id: coinId }] })))
+      vi.fn((input: string | URL | Request) =>
+        Promise.resolve(
+          String(input).endsWith("/v1/issuers")
+            ? jsonResponse({ issuers })
+            : jsonResponse({ coins: [{ id: coinId }] })
+        )
+      )
     )
 
     renderArchiveRoute()
@@ -169,15 +256,53 @@ describe("Archive landing route", () => {
     expect(await screen.findByText("Unable to load coins")).toBeInTheDocument()
   })
 
+  it("uses the route error state for an invalid Issuer response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: string | URL | Request) =>
+        Promise.resolve(
+          String(input).endsWith("/v1/issuers")
+            ? jsonResponse({ issuers: [{ name: "Argentina", id: "internal" }] })
+            : jsonResponse({ coins: [coin] })
+        )
+      )
+    )
+
+    renderArchiveRoute()
+
+    expect(
+      await screen.findByText("Invalid issuer list response")
+    ).toBeVisible()
+    expect(screen.queryByRole("combobox", { name: "Issuer" })).toBeNull()
+  })
+
+  it("uses the route error state when the Issuer request fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: string | URL | Request) =>
+        String(input).endsWith("/v1/issuers")
+          ? Promise.reject(new TypeError("offline"))
+          : Promise.resolve(jsonResponse({ coins: [coin] }))
+      )
+    )
+
+    renderArchiveRoute()
+
+    expect(await screen.findByText("Unable to load coins")).toBeVisible()
+    expect(screen.queryByRole("combobox", { name: "Issuer" })).toBeNull()
+  })
+
   it("navigates from a Coin tile to the Coin detail route", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((input: string | URL | Request) => {
         const url = String(input)
         return Promise.resolve(
-          jsonResponse(
-            url.endsWith(`/v1/coins/${coinId}`) ? coin : { coins: [coin] }
-          )
+          url.endsWith("/v1/issuers")
+            ? jsonResponse({ issuers })
+            : jsonResponse(
+                url.endsWith(`/v1/coins/${coinId}`) ? coin : { coins: [coin] }
+              )
         )
       })
     )

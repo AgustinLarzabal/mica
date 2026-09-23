@@ -27,6 +27,12 @@ export const issuerResponseSchema = z.strictObject({
 
 export type IssuerResponse = z.infer<typeof issuerResponseSchema>
 
+export const issuerListResponseSchema = z.strictObject({
+  issuers: z.array(issuerResponseSchema),
+})
+
+export type IssuerListResponse = z.infer<typeof issuerListResponseSchema>
+
 export const coinResponseSchema = z.strictObject({
   id: coinIdSchema,
   title: z.string().min(1).max(200),
