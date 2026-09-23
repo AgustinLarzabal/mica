@@ -142,8 +142,11 @@ describe("Archive landing route", () => {
     renderArchiveRoute("/?issuer=ZZ")
 
     expect(await screen.findByText("Issuer not found")).toBeVisible()
-    expect(screen.getByRole("combobox", { name: "Issuer" })).toBeVisible()
-    expect(screen.getAllByRole("option")).toHaveLength(4)
+    expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveValue("ZZ")
+    expect(
+      screen.getByRole("option", { name: "Unknown issuer (ZZ)" })
+    ).toBeDisabled()
+    expect(screen.getAllByRole("option")).toHaveLength(5)
   })
 
   it("keeps filtered and unfiltered Coin collections distinct", async () => {

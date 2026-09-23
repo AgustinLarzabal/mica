@@ -17,7 +17,7 @@ import { Explore } from "@/features/explore/explore"
 
 export const Route = createFileRoute("/")({
   component: App,
-  errorComponent: CoinListError,
+  errorComponent: ExploreError,
   validateSearch: (search): { issuer?: string } => ({
     issuer:
       search.issuer === undefined
@@ -40,8 +40,8 @@ export const Route = createFileRoute("/")({
 
 function App() {
   const { issuer: issuerCode } = Route.useSearch()
-  const { data } = useSuspenseQuery(issuerListQueryOptions())
-  const selectedIssuer = data.issuers.find(
+  const { data: issuerList } = useSuspenseQuery(issuerListQueryOptions())
+  const selectedIssuer = issuerList.issuers.find(
     (issuer) => issuer.code === issuerCode
   )
 
@@ -49,21 +49,18 @@ function App() {
     <>
       <Header />
       <main className="mt-18 mb-14">
-        <IssuerSelect
-          issuerCode={selectedIssuer?.code}
-          issuers={data.issuers}
-        />
+        <IssuerSelect issuerCode={issuerCode} issuers={issuerList.issuers} />
         {issuerCode && !selectedIssuer ? (
           <RouteMessage>Issuer not found</RouteMessage>
         ) : (
-          <Explore issuerCode={issuerCode} issuerName={selectedIssuer?.name} />
+          <Explore issuer={selectedIssuer} />
         )}
       </main>
     </>
   )
 }
 
-function CoinListError({ error }: ErrorComponentProps) {
+function ExploreError({ error }: ErrorComponentProps) {
   return (
     <RouteMessage>
       {error instanceof InvalidCoinListResponseError

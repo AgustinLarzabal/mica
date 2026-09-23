@@ -9,6 +9,10 @@ export function IssuerSelect({
   issuers: Array<IssuerResponse>
 }) {
   const navigate = useNavigate({ from: "/" })
+  const unknownIssuerCode =
+    issuerCode && !issuers.some((issuer) => issuer.code === issuerCode)
+      ? issuerCode
+      : undefined
 
   return (
     <div className="flex h-18 items-center gap-3 border-b px-5 md:px-10">
@@ -33,6 +37,11 @@ export function IssuerSelect({
             {issuer.name}
           </option>
         ))}
+        {unknownIssuerCode && (
+          <option value={unknownIssuerCode} disabled>
+            Unknown issuer ({unknownIssuerCode})
+          </option>
+        )}
       </select>
     </div>
   )
