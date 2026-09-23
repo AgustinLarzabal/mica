@@ -8,19 +8,21 @@ import {
   coinResponseSchema,
   internalErrorSchema as sharedInternalErrorSchema,
   invalidCoinIdErrorSchema as sharedInvalidCoinIdErrorSchema,
+  invalidIssuerCodeErrorSchema as sharedInvalidIssuerCodeErrorSchema,
+  issuerCodeSchema,
   issuerResponseSchema,
   operationalOkResponseSchema as sharedOperationalOkResponseSchema,
   operationalUnavailableResponseSchema as sharedOperationalUnavailableResponseSchema,
 } from "@workspace/api"
 import { cors } from "hono/cors"
 import type { CoinListResponse, CoinResponse } from "@workspace/api"
-import type { Coin } from "@workspace/db"
+import type { Coin, CoinListOptions } from "@workspace/db"
 
 export interface AppOptions {
   allowedOrigins: ReadonlyArray<string>
   checkReadiness: () => Promise<void>
   findCoinById?: (coinId: string) => Promise<Coin | null>
-  listCoins?: () => Promise<Array<Coin>>
+  listCoins?: (options?: CoinListOptions) => Promise<Array<Coin>>
   log?: (line: string) => void
 }
 
@@ -51,6 +53,13 @@ const coinSchema = coinResponseSchema
 const coinListResponseSchema =
   sharedCoinListResponseSchema.openapi("CoinListResponse")
 
+const coinListQuerySchema = z.object({
+  issuer: issuerCodeSchema.optional().openapi({
+    description: "Exact, case-sensitive Issuer Code",
+    param: { name: "issuer", in: "query" },
+  }),
+})
+
 function toCoinResponse(coin: Coin): CoinResponse {
   return {
     id: coin.id,
@@ -71,6 +80,9 @@ const coinPathParametersSchema = z
 
 const invalidCoinIdErrorSchema =
   sharedInvalidCoinIdErrorSchema.openapi("InvalidCoinIdError")
+const invalidIssuerCodeErrorSchema = sharedInvalidIssuerCodeErrorSchema.openapi(
+  "InvalidIssuerCodeError"
+)
 const coinNotFoundErrorSchema =
   sharedCoinNotFoundErrorSchema.openapi("CoinNotFoundError")
 const internalErrorSchema = sharedInternalErrorSchema.openapi("InternalError")
@@ -106,10 +118,16 @@ const coinDetailRoute = createRoute({
 const coinListRoute = createRoute({
   method: "get",
   path: "/v1/coins",
+  request: { query: coinListQuerySchema },
   responses: {
     200: {
       content: { "application/json": { schema: coinListResponseSchema } },
       description: "A list of Coins",
+      headers: operationalResponseHeaders,
+    },
+    400: {
+      content: { "application/json": { schema: invalidIssuerCodeErrorSchema } },
+      description: "The Issuer Code filter is malformed",
       headers: operationalResponseHeaders,
     },
     500: {
@@ -239,14 +257,34 @@ export function createApp(options: AppOptions) {
     }
   })
 
-  app.openapi(coinListRoute, async (context) => {
-    const coins = await (options.listCoins ?? (async () => []))()
-    const response = {
-      coins: coins.map(toCoinResponse),
-    } satisfies CoinListResponse
+  app.openapi(
+    coinListRoute,
+    async (context) => {
+      const { issuer: issuerCode } = context.req.valid("query")
+      const listCoins = options.listCoins ?? (async () => [])
+      const coins = await (issuerCode === undefined
+        ? listCoins()
+        : listCoins({ issuerCode }))
+      const response = {
+        coins: coins.map(toCoinResponse),
+      } satisfies CoinListResponse
 
-    return context.json(response, 200)
-  })
+      return context.json(response, 200)
+    },
+    (result, context) => {
+      if (!result.success) {
+        return context.json(
+          {
+            error: {
+              code: "invalid_issuer_code" as const,
+              message: "Issuer Code is invalid" as const,
+            },
+          },
+          400
+        )
+      }
+    }
+  )
 
   app.openapi(
     coinDetailRoute,

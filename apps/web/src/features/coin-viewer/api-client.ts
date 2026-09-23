@@ -13,11 +13,16 @@ export class CoinRequestError extends Error {}
 export class InvalidCoinListResponseError extends Error {}
 export class CoinListRequestError extends Error {}
 
-export async function getCoins(): Promise<CoinListResponse> {
+export async function getCoins(issuerCode?: string): Promise<CoinListResponse> {
   let response: Response
 
   try {
-    response = await fetch(`${API_BASE_URL}/v1/coins`)
+    const search = new URLSearchParams()
+    if (issuerCode !== undefined) {
+      search.set("issuer", issuerCode)
+    }
+    const query = search.size === 0 ? "" : `?${search.toString()}`
+    response = await fetch(`${API_BASE_URL}/v1/coins${query}`)
   } catch (error) {
     throw new CoinListRequestError("Coin list request failed", {
       cause: error,

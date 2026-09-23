@@ -16,9 +16,13 @@ export type OperationalUnavailableResponse = z.infer<
 
 export const coinIdSchema = z.uuid()
 
+export const issuerCodeSchema = z
+  .string()
+  .regex(/^(?:[A-Z]{2}|[A-Z0-9-]{3,12})$/)
+
 export const issuerResponseSchema = z.strictObject({
   name: z.string().min(1).max(200),
-  code: z.string().regex(/^(?:[A-Z]{2}|[A-Z0-9-]{3,12})$/),
+  code: issuerCodeSchema,
 })
 
 export type IssuerResponse = z.infer<typeof issuerResponseSchema>
@@ -54,6 +58,11 @@ function errorResponseSchema<
 export const invalidCoinIdErrorSchema = errorResponseSchema(
   "invalid_coin_id",
   "Coin ID must be a valid UUID"
+)
+
+export const invalidIssuerCodeErrorSchema = errorResponseSchema(
+  "invalid_issuer_code",
+  "Issuer Code is invalid"
 )
 
 export const coinNotFoundErrorSchema = errorResponseSchema(

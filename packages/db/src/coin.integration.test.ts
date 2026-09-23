@@ -80,6 +80,54 @@ describe("Coin persistence", () => {
     }
   })
 
+  it("lists only Coins for one exact Issuer Code while preserving order", async () => {
+    const database = createDatabase(getDatabaseUrl())
+    try {
+      const argentina = await insertArgentina(database)
+      const [romanEmpire] = await database.orm
+        .insert(database.schema.issuers)
+        .values({ name: "Roman Empire", code: "ROMAN" })
+        .returning()
+      const firstTiedId = "00000000-0000-4000-8000-000000000001"
+      const secondTiedId = "00000000-0000-4000-8000-000000000002"
+
+      await database.orm.insert(database.schema.coins).values([
+        {
+          id: secondTiedId,
+          title: "Second Roman coin",
+          issuerId: romanEmpire.id,
+          createdAt: new Date("2026-09-16T10:00:00.000Z"),
+        },
+        {
+          title: "Argentine coin",
+          issuerId: argentina.id,
+          createdAt: new Date("2026-09-17T10:00:00.000Z"),
+        },
+        {
+          id: firstTiedId,
+          title: "First Roman coin",
+          issuerId: romanEmpire.id,
+          createdAt: new Date("2026-09-16T10:00:00.000Z"),
+        },
+      ])
+
+      await expect(
+        database.listCoins({ issuerCode: "ROMAN" })
+      ).resolves.toEqual([
+        expect.objectContaining({ id: firstTiedId }),
+        expect.objectContaining({ id: secondTiedId }),
+      ])
+      await expect(
+        database.listCoins({ issuerCode: "roman" })
+      ).resolves.toEqual([])
+      await expect(
+        database.listCoins({ issuerCode: "UNKNOWN" })
+      ).resolves.toEqual([])
+    } finally {
+      await database.close()
+    }
+  })
+
   it("lists no Coins from an empty archive", async () => {
     const database = createDatabase(getDatabaseUrl())
     try {

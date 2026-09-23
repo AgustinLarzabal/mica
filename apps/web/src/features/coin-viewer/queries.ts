@@ -1,14 +1,22 @@
 import { queryOptions } from "@tanstack/react-query"
-import { coinIdSchema } from "@workspace/api"
+import { coinIdSchema, issuerCodeSchema } from "@workspace/api"
 
 import { getCoin, getCoins } from "./api-client"
 
 export class InvalidCoinIdError extends Error {}
+export class InvalidIssuerCodeError extends Error {}
 
-export function coinListQueryOptions() {
+export function coinListQueryOptions(issuerCode?: string) {
+  if (
+    issuerCode !== undefined &&
+    !issuerCodeSchema.safeParse(issuerCode).success
+  ) {
+    throw new InvalidIssuerCodeError("Invalid issuer code")
+  }
+
   return queryOptions({
-    queryKey: ["coins", "list"] as const,
-    queryFn: getCoins,
+    queryKey: ["coins", "list", issuerCode ?? null] as const,
+    queryFn: () => getCoins(issuerCode),
     staleTime: 30_000,
   })
 }

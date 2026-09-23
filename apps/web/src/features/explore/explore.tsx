@@ -4,8 +4,8 @@ import { ExploreGrid } from "./components/explore-grid"
 import { RouteMessage } from "@/components/route-message"
 import { coinListQueryOptions } from "@/features/coin-viewer/queries"
 
-export function Explore() {
-  const { data } = useSuspenseQuery(coinListQueryOptions())
+export function Explore({ issuerCode }: { issuerCode?: string }) {
+  const { data } = useSuspenseQuery(coinListQueryOptions(issuerCode))
 
   if (data.coins.length === 0) {
     return (

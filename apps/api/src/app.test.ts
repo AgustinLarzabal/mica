@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { createApp } from "./app.js"
 
@@ -494,6 +494,78 @@ describe("API", () => {
   })
 
   describe("GET /v1/coins", () => {
+    it("passes one exact Issuer Code to the Coin collection", async () => {
+      const listCoins = vi.fn(async () => [])
+
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        listCoins,
+      }).request("/v1/coins?issuer=ROMAN")
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get("cache-control")).toBe("no-store")
+      expect(listCoins).toHaveBeenCalledExactlyOnceWith({
+        issuerCode: "ROMAN",
+      })
+      await expect(response.json()).resolves.toEqual({ coins: [] })
+    })
+
+    it("omits the Coin collection filter when the query parameter is absent", async () => {
+      const listCoins = vi.fn(async () => [])
+
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        listCoins,
+      }).request("/v1/coins")
+
+      expect(response.status).toBe(200)
+      expect(listCoins).toHaveBeenCalledExactlyOnceWith()
+    })
+
+    it.each(["", "ar", "A", "ABC_123"])(
+      "rejects the malformed Issuer Code %j without listing Coins",
+      async (issuerCode) => {
+        const listCoins = vi.fn(async () => [])
+
+        const response = await createApp({
+          allowedOrigins: [],
+          checkReadiness: successfulReadinessCheck,
+          listCoins,
+        }).request(`/v1/coins?issuer=${encodeURIComponent(issuerCode)}`)
+
+        expect(response.status).toBe(400)
+        expect(response.headers.get("cache-control")).toBe("no-store")
+        expect(listCoins).not.toHaveBeenCalled()
+        await expect(response.json()).resolves.toEqual({
+          error: {
+            code: "invalid_issuer_code",
+            message: "Issuer Code is invalid",
+          },
+        })
+      }
+    )
+
+    it("rejects multiple Issuer Code filters without listing Coins", async () => {
+      const listCoins = vi.fn(async () => [])
+
+      const response = await createApp({
+        allowedOrigins: [],
+        checkReadiness: successfulReadinessCheck,
+        listCoins,
+      }).request("/v1/coins?issuer=AR&issuer=ROMAN")
+
+      expect(response.status).toBe(400)
+      expect(listCoins).not.toHaveBeenCalled()
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: "invalid_issuer_code",
+          message: "Issuer Code is invalid",
+        },
+      })
+    })
+
     it("returns persisted Coins with UTC timestamps and no caching", async () => {
       const response = await createApp({
         allowedOrigins: [],
@@ -572,16 +644,37 @@ describe("API", () => {
       const document = (await response.json()) as {
         components: { schemas: Record<string, unknown> }
         paths: {
-          "/v1/coins": { get: { responses: Record<string, unknown> } }
+          "/v1/coins": {
+            get: {
+              parameters: Array<Record<string, unknown>>
+              responses: Record<string, unknown>
+            }
+          }
         }
       }
 
+      expect(document.paths["/v1/coins"].get.parameters).toEqual([
+        expect.objectContaining({
+          description: "Exact, case-sensitive Issuer Code",
+          in: "query",
+          name: "issuer",
+          required: false,
+          schema: expect.objectContaining({ pattern: expect.any(String) }),
+        }),
+      ])
       expect(document.paths["/v1/coins"].get.responses).toEqual(
         expect.objectContaining({
           "200": expect.objectContaining({
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/CoinListResponse" },
+              },
+            },
+          }),
+          "400": expect.objectContaining({
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/InvalidIssuerCodeError" },
               },
             },
           }),
@@ -597,6 +690,7 @@ describe("API", () => {
       expect(document.components.schemas).toEqual(
         expect.objectContaining({
           CoinListResponse: expect.any(Object),
+          InvalidIssuerCodeError: expect.any(Object),
           InternalError: expect.any(Object),
         })
       )

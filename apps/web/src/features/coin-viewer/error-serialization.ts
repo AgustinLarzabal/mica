@@ -4,7 +4,7 @@ import {
   InvalidCoinListResponseError,
   InvalidCoinResponseError,
 } from "./api-client"
-import { InvalidCoinIdError } from "./queries"
+import { InvalidCoinIdError, InvalidIssuerCodeError } from "./queries"
 
 function errorAdapter(key: string, ErrorType: new (message: string) => Error) {
   return createSerializationAdapter({
@@ -20,4 +20,5 @@ export const coinErrorSerializationAdapters = [
   errorAdapter("InvalidCoinIdError", InvalidCoinIdError),
   errorAdapter("InvalidCoinResponseError", InvalidCoinResponseError),
   errorAdapter("InvalidCoinListResponseError", InvalidCoinListResponseError),
+  errorAdapter("InvalidIssuerCodeError", InvalidIssuerCodeError),
 ]

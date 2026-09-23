@@ -8,12 +8,16 @@ export interface Database {
   checkReadiness: () => Promise<void>
   close: () => Promise<void>
   findCoinById: (coinId: string) => Promise<Coin | null>
-  listCoins: () => Promise<Array<Coin>>
+  listCoins: (options?: CoinListOptions) => Promise<Array<Coin>>
   orm: ReturnType<typeof drizzle<typeof schema>>
   schema: typeof schema
 }
 
 export type Coin = schema.CoinRecord & { issuer: schema.IssuerRecord }
+
+export interface CoinListOptions {
+  issuerCode?: string
+}
 
 export interface DatabaseOptions {
   connectionTimeoutMillis?: number
@@ -48,11 +52,16 @@ export function createDatabase(
       const row = rows.at(0)
       return row ? { ...row.coin, issuer: row.issuer } : null
     },
-    async listCoins() {
+    async listCoins(filters = {}) {
       const rows = await orm
         .select({ coin: schema.coins, issuer: schema.issuers })
         .from(schema.coins)
         .innerJoin(schema.issuers, eq(schema.coins.issuerId, schema.issuers.id))
+        .where(
+          filters.issuerCode === undefined
+            ? undefined
+            : eq(schema.issuers.code, filters.issuerCode)
+        )
         .orderBy(desc(schema.coins.createdAt), asc(schema.coins.id))
       return rows.map(({ coin, issuer }) => ({ ...coin, issuer }))
     },

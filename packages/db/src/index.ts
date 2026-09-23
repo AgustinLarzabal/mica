@@ -1,5 +1,10 @@
 export { createDatabase } from "./connection.js"
-export type { Coin, Database, DatabaseOptions } from "./connection.js"
+export type {
+  Coin,
+  CoinListOptions,
+  Database,
+  DatabaseOptions,
+} from "./connection.js"
 export { coinRecordSchema, issuerRecordSchema } from "./schema/index.js"
 export type { CoinRecord, IssuerRecord } from "./schema/index.js"
 export { rebuildDatabase } from "./reset.js"

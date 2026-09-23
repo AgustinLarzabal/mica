@@ -25,8 +25,8 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
-function renderArchiveRoute() {
-  const history = createMemoryHistory({ initialEntries: ["/"] })
+function renderArchiveRoute(initialEntry = "/") {
+  const history = createMemoryHistory({ initialEntries: [initialEntry] })
   const router = getRouter({ history })
   render(<RouterProvider router={router} />)
   return router
@@ -37,6 +37,61 @@ afterEach(() => {
 })
 
 describe("Archive landing route", () => {
+  it("requests the filtered Coin collection when opened with an Issuer Code", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(jsonResponse({ coins: [coin] }))
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    const router = renderArchiveRoute("/?issuer=AR")
+
+    expect(
+      await screen.findByRole("link", { name: "First coin" })
+    ).toBeVisible()
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+      "http://localhost:3001/v1/coins?issuer=AR"
+    )
+    expect(router.state.location.searchStr).toBe("?issuer=AR")
+  })
+
+  it("keeps filtered and unfiltered Coin collections distinct", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(jsonResponse({ coins: [coin] }))
+    )
+    vi.stubGlobal("fetch", fetchMock)
+    const router = renderArchiveRoute("/?issuer=AR")
+    await screen.findByRole("link", { name: "First coin" })
+
+    await router.navigate({ to: "/", search: {} })
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://localhost:3001/v1/coins?issuer=AR"
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://localhost:3001/v1/coins"
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it.each(["", "ar", "A", "ABC_123"])(
+    "shows an error for malformed Issuer Code %j without rewriting or requesting",
+    async (issuerCode) => {
+      const fetchMock = vi.fn(() =>
+        Promise.resolve(jsonResponse({ coins: [coin] }))
+      )
+      vi.stubGlobal("fetch", fetchMock)
+      const search = `?issuer=${encodeURIComponent(issuerCode)}`
+
+      const router = renderArchiveRoute(`/${search}`)
+
+      expect(await screen.findByText("Invalid issuer code")).toBeVisible()
+      expect(fetchMock).not.toHaveBeenCalled()
+      expect(router.state.location.searchStr).toBe(search)
+    }
+  )
+
   it.each([
     ["ISO", { name: "Argentina", code: "AR" }],
     ["Archive-defined", { name: "Roman Empire", code: "ROMAN" }],

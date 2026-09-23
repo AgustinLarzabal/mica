@@ -5,7 +5,7 @@ import {
   InvalidCoinListResponseError,
   InvalidCoinResponseError,
 } from "./api-client"
-import { InvalidCoinIdError } from "./queries"
+import { InvalidCoinIdError, InvalidIssuerCodeError } from "./queries"
 import { Route as CoinRoute } from "@/routes/coins.$coinId"
 import { Route as ArchiveRoute } from "@/routes/index"
 import { startInstance } from "@/start"
@@ -30,6 +30,11 @@ describe("Coin errors across the SSR serialization boundary", () => {
       ErrorType: InvalidCoinListResponseError,
       route: ArchiveRoute,
       message: "Invalid coin list response",
+    },
+    {
+      ErrorType: InvalidIssuerCodeError,
+      route: ArchiveRoute,
+      message: "Invalid issuer code",
     },
   ])(
     "preserves '$message' after transfer",
