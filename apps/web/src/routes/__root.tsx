@@ -11,6 +11,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { RouterContext } from "@/router"
 import { Footer } from "@/components/footer"
+import { Header } from "@/components/header"
 import { NotFound } from "@/components/not-found"
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -53,6 +54,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           isCoinDetailsPage && "overflow-hidden"
         )}
       >
+        {!isCoinDetailsPage && <Header />}
         {children}
         <Footer />
         <TanStackDevtools

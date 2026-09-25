@@ -1,7 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import type { ErrorComponentProps } from "@tanstack/react-router"
-import { Header } from "@/components/header"
 import { RouteMessage } from "@/components/route-message"
 import {
   InvalidCoinListResponseError,
@@ -12,7 +11,7 @@ import {
   InvalidIssuerCodeError,
   issuerListQueryOptions,
 } from "@/features/coin-viewer/queries"
-import { IssuerSelect } from "@/features/explore/components/issuer-select"
+import { ExploreFilters } from "@/features/explore/components/explore-filters"
 import { Explore } from "@/features/explore/explore"
 
 export const Route = createFileRoute("/")({
@@ -45,17 +44,14 @@ function App() {
   )
 
   return (
-    <>
-      <Header />
-      <main className="mt-18 mb-14">
-        <IssuerSelect issuerCode={issuerCode} issuers={issuerList.issuers} />
-        {issuerCode && !selectedIssuer ? (
-          <RouteMessage>Issuer not found</RouteMessage>
-        ) : (
-          <Explore issuer={selectedIssuer} />
-        )}
-      </main>
-    </>
+    <main className="mt-18 mb-14">
+      <ExploreFilters issuerCode={issuerCode} issuers={issuerList.issuers} />
+      {issuerCode && !selectedIssuer ? (
+        <RouteMessage>Issuer not found</RouteMessage>
+      ) : (
+        <Explore issuer={selectedIssuer} />
+      )}
+    </main>
   )
 }
 

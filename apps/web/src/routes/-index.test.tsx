@@ -125,6 +125,17 @@ describe("Archive landing route", () => {
     expect(select).toHaveValue("")
   })
 
+  it("places the Issuer select in the Explore filters navigation", async () => {
+    vi.stubGlobal("fetch", vi.fn(createArchiveFetch()))
+
+    renderArchiveRoute()
+
+    const filters = await screen.findByRole("navigation")
+    expect(filters).toContainElement(
+      screen.getByRole("combobox", { name: "Issuer" })
+    )
+  })
+
   it("names a known selected Issuer when it has no Coins", async () => {
     vi.stubGlobal("fetch", vi.fn(createArchiveFetch([])))
 

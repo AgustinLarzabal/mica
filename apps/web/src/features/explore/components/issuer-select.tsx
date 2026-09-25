@@ -15,12 +15,10 @@ export function IssuerSelect({
       : undefined
 
   return (
-    <div className="flex h-18 items-center gap-3 border-b px-5 md:px-10">
-      <label htmlFor="issuer-filter" className="text-sm font-medium">
-        Issuer
-      </label>
+    <div className="flex items-center gap-3">
       <select
         id="issuer-filter"
+        aria-label="Issuer"
         className="rounded-md border bg-background px-3 py-2 text-sm"
         value={issuerCode ?? ""}
         onChange={(event) => {
