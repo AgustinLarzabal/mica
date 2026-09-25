@@ -25,7 +25,7 @@ export function issuerListQueryOptions() {
   return queryOptions({
     queryKey: ["issuers", "list"] as const,
     queryFn: getIssuers,
-    staleTime: 30_000,
+    staleTime: Infinity,
   })
 }
 
