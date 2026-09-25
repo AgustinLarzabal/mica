@@ -28,9 +28,8 @@ export const Route = createFileRoute("/")({
   }),
   loaderDeps: ({ search: { issuer: issuerCode } }) => ({ issuerCode }),
   loader: async ({ context, deps: { issuerCode } }) => {
-    const coinQuery = coinListQueryOptions(issuerCode)
     await Promise.all([
-      context.queryClient.query(coinQuery),
+      context.queryClient.query(coinListQueryOptions(issuerCode)),
       context.queryClient.query(issuerListQueryOptions()),
     ])
   },
