@@ -8,6 +8,9 @@ export interface RouterContext {
   queryClient: QueryClient
 }
 
+// Tune both thresholds together when production navigation traces are available.
+const ROUTE_PENDING_FEEDBACK_MS = 200
+
 export function getRouter(options: { history?: RouterHistory } = {}) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -20,6 +23,8 @@ export function getRouter(options: { history?: RouterHistory } = {}) {
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
+    defaultPendingMs: ROUTE_PENDING_FEEDBACK_MS,
+    defaultPendingMinMs: ROUTE_PENDING_FEEDBACK_MS,
     defaultViewTransition: true,
   })
 

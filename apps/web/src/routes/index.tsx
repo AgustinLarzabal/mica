@@ -34,7 +34,6 @@ export const Route = createFileRoute("/")({
     await context.queryClient.ensureQueryData(issuerListQueryOptions())
   },
   pendingComponent: () => <RouteMessage>Loading coins…</RouteMessage>,
-  pendingMs: 0,
 })
 
 function App() {

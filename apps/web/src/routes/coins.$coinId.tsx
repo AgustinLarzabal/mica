@@ -29,7 +29,6 @@ export const Route = createFileRoute("/coins/$coinId")({
   },
   notFoundComponent: () => <RouteMessage>Coin not found</RouteMessage>,
   pendingComponent: () => <RouteMessage>Loading coin…</RouteMessage>,
-  pendingMs: 0,
 })
 
 function CoinViewerRoute() {

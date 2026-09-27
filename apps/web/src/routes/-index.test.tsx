@@ -1,5 +1,5 @@
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router"
-import { render, screen, waitFor } from "@testing-library/react"
+import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -30,6 +30,15 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise
+  })
+
+  return { promise, resolve }
+}
+
 function createArchiveFetch(coins: Array<typeof coin> = [coin]) {
   return (input: string | URL | Request) =>
     Promise.resolve(
@@ -47,6 +56,7 @@ function renderArchiveRoute(initialEntry = "/") {
 }
 
 afterEach(() => {
+  vi.useRealTimers()
   vi.unstubAllGlobals()
 })
 
@@ -382,6 +392,131 @@ describe("Archive landing route", () => {
       await screen.findByRole("heading", { name: "First coin" })
     ).toBeInTheDocument()
     expect(router.state.location.pathname).toBe(`/coins/${coinId}`)
+  })
+
+  it("does not show pending feedback when Coin detail resolves quickly", async () => {
+    const detailResponse = createDeferred<Response>()
+    const detailRequested = createDeferred<void>()
+    const fetchMock = vi.fn((input: string | URL | Request) => {
+      const url = String(input)
+
+      if (url.endsWith(`/v1/coins/${coinId}`)) {
+        detailRequested.resolve()
+        return detailResponse.promise
+      }
+
+      return Promise.resolve(
+        url.endsWith("/v1/issuers")
+          ? jsonResponse({ issuers })
+          : jsonResponse({ coins: [coin] })
+      )
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    renderArchiveRoute()
+    const coinLink = await screen.findByRole("link", { name: "First coin" })
+    vi.useFakeTimers()
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+    const navigation = user.click(coinLink)
+    await detailRequested.promise
+    await act(() => vi.advanceTimersByTimeAsync(100))
+
+    expect(screen.queryByText("Loading coin…")).not.toBeInTheDocument()
+
+    detailResponse.resolve(jsonResponse(coin))
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    await navigation
+    expect(
+      await screen.findByRole("heading", { name: "First coin" })
+    ).toBeVisible()
+    expect(screen.queryByText("Loading coin…")).not.toBeInTheDocument()
+  })
+
+  it("shows pending feedback when Coin detail remains slow", async () => {
+    const detailResponse = createDeferred<Response>()
+    const detailRequested = createDeferred<void>()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: string | URL | Request) => {
+        const url = String(input)
+
+        if (url.endsWith(`/v1/coins/${coinId}`)) {
+          detailRequested.resolve()
+          return detailResponse.promise
+        }
+
+        return Promise.resolve(
+          url.endsWith("/v1/issuers")
+            ? jsonResponse({ issuers })
+            : jsonResponse({ coins: [coin] })
+        )
+      })
+    )
+    renderArchiveRoute()
+    const coinLink = await screen.findByRole("link", { name: "First coin" })
+    vi.useFakeTimers()
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+    const navigation = user.click(coinLink)
+    await detailRequested.promise
+    await act(() => vi.advanceTimersByTimeAsync(201))
+
+    expect(screen.getByText("Loading coin…")).toBeVisible()
+
+    detailResponse.resolve(jsonResponse(coin))
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    await navigation
+    expect(
+      await screen.findByRole("heading", { name: "First coin" })
+    ).toBeVisible()
+  })
+
+  it("preloads Coin detail on intent and reuses it during navigation", async () => {
+    const detailResponse = createDeferred<Response>()
+    const detailRequested = createDeferred<void>()
+    const fetchMock = vi.fn((input: string | URL | Request) => {
+      const url = String(input)
+
+      if (url.endsWith(`/v1/coins/${coinId}`)) {
+        detailRequested.resolve()
+        return detailResponse.promise
+      }
+
+      return Promise.resolve(
+        url.endsWith("/v1/issuers")
+          ? jsonResponse({ issuers })
+          : jsonResponse({ coins: [coin] })
+      )
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    const user = userEvent.setup()
+    const router = renderArchiveRoute()
+    const coinLink = await screen.findByRole("link", { name: "First coin" })
+
+    await user.hover(coinLink)
+    await detailRequested.promise
+    detailResponse.resolve(jsonResponse(coin))
+    await waitFor(() =>
+      expect(
+        router.options.context.queryClient.getQueryState([
+          "coins",
+          "detail",
+          coinId,
+        ])?.status
+      ).toBe("success")
+    )
+
+    await user.click(coinLink)
+
+    expect(
+      await screen.findByRole("heading", { name: "First coin" })
+    ).toBeVisible()
+    expect(screen.queryByText("Loading coin…")).not.toBeInTheDocument()
+    expect(
+      fetchMock.mock.calls.filter(([input]) =>
+        String(input).endsWith(`/v1/coins/${coinId}`)
+      )
+    ).toHaveLength(1)
   })
 
   it("enables view transitions for router navigations", () => {
