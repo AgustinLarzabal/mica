@@ -165,6 +165,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+  }
+
   ::view-transition-group(*) {
     animation-duration: 0.01ms;
   }

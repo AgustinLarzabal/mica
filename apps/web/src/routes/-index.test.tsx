@@ -246,6 +246,24 @@ describe("Archive landing route", () => {
     }
   )
 
+  it("bounds Explore Coin animation delays", async () => {
+    const coins = Array.from({ length: 20 }, (_, index) => ({
+      ...coin,
+      id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+      title: `Coin ${index + 1}`,
+    }))
+    vi.stubGlobal("fetch", vi.fn(createArchiveFetch(coins)))
+
+    renderArchiveRoute()
+
+    expect(await screen.findByRole("link", { name: "Coin 2" })).toHaveStyle({
+      animationDelay: "60ms",
+    })
+    expect(screen.getByRole("link", { name: "Coin 20" })).toHaveStyle({
+      animationDelay: "240ms",
+    })
+  })
+
   it("shows the empty archive message", async () => {
     vi.stubGlobal("fetch", vi.fn(createArchiveFetch([])))
 
