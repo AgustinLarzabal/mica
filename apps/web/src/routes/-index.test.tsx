@@ -62,17 +62,18 @@ afterEach(() => {
 
 describe("Archive landing route", () => {
   it("loads Coins and Issuers concurrently and keeps loading until both are ready", async () => {
-    let resolveCoins!: (response: Response) => void
-    let resolveIssuers!: (response: Response) => void
-    const coinsResponse = new Promise<Response>((resolve) => {
-      resolveCoins = resolve
+    const coinsResponse = createDeferred<Response>()
+    const issuersResponse = createDeferred<Response>()
+    const filteredCoinsResponse = createDeferred<Response>()
+    const fetchMock = vi.fn((input: string | URL | Request) => {
+      const url = String(input)
+
+      return url.endsWith("/v1/issuers")
+        ? issuersResponse.promise
+        : url.endsWith("/v1/coins?issuer=ROMAN")
+          ? filteredCoinsResponse.promise
+          : coinsResponse.promise
     })
-    const issuersResponse = new Promise<Response>((resolve) => {
-      resolveIssuers = resolve
-    })
-    const fetchMock = vi.fn((input: string | URL | Request) =>
-      String(input).endsWith("/v1/issuers") ? issuersResponse : coinsResponse
-    )
     vi.stubGlobal("fetch", fetchMock)
 
     const router = renderArchiveRoute("/?issuer=AR")
@@ -82,22 +83,50 @@ describe("Archive landing route", () => {
       "http://localhost:3001/v1/coins?issuer=AR"
     )
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:3001/v1/issuers")
-    expect(screen.getByText("Loading coins…")).toBeVisible()
+    expect(await screen.findByText("Loading coins…")).toBeVisible()
 
-    resolveCoins(jsonResponse({ coins: [coin] }))
-    await Promise.resolve()
-    expect(screen.getByText("Loading coins…")).toBeVisible()
-
-    resolveIssuers(
+    issuersResponse.resolve(
       jsonResponse({ issuers: [{ name: "Argentina", code: "AR" }] })
     )
+    await waitFor(() =>
+      expect(
+        router.options.context.queryClient.getQueryState(["issuers", "list"])
+          ?.status
+      ).toBe("success")
+    )
+    expect(router.state.status).toBe("pending")
+    expect(screen.getByText("Loading coins…")).toBeVisible()
+
+    coinsResponse.resolve(jsonResponse({ coins: [coin] }))
     expect(
       await screen.findByRole("link", { name: "First coin" })
     ).toBeVisible()
+    expect(router.state.status).toBe("idle")
     expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveTextContent(
       "Argentina"
     )
     expect(router.state.location.searchStr).toBe("?issuer=AR")
+
+    const navigation = router.navigate({
+      to: "/",
+      search: { issuer: "ROMAN" },
+    })
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:3001/v1/coins?issuer=ROMAN"
+      )
+    )
+    const settlement = await Promise.race([
+      navigation.then(() => "settled" as const),
+      new Promise<"pending">((resolve) => {
+        setTimeout(() => resolve("pending"), 0)
+      }),
+    ])
+
+    expect(settlement).toBe("pending")
+    filteredCoinsResponse.resolve(jsonResponse({ coins: [coin] }))
+    await navigation
+    expect(router.state.location.searchStr).toBe("?issuer=ROMAN")
   })
 
   it("keeps the selected Issuer synchronized with URL state", async () => {
@@ -143,10 +172,8 @@ describe("Archive landing route", () => {
   })
 
   it("keeps the Explore filters visible while a newly selected Issuer loads", async () => {
-    let resolveFilteredCoins!: (response: Response) => void
-    const filteredCoinsResponse = new Promise<Response>((resolve) => {
-      resolveFilteredCoins = resolve
-    })
+    const filteredCoinsResponse = createDeferred<Response>()
+    const filteredCoinsRequested = createDeferred<void>()
     const fetchMock = vi.fn((input: string | URL | Request) => {
       const url = String(input)
 
@@ -154,29 +181,30 @@ describe("Archive landing route", () => {
         return Promise.resolve(jsonResponse({ issuers }))
       }
 
-      return url.endsWith("/v1/coins?issuer=ROMAN")
-        ? filteredCoinsResponse
-        : Promise.resolve(jsonResponse({ coins: [coin] }))
+      if (url.endsWith("/v1/coins?issuer=ROMAN")) {
+        filteredCoinsRequested.resolve()
+        return filteredCoinsResponse.promise
+      }
+
+      return Promise.resolve(jsonResponse({ coins: [coin] }))
     })
     vi.stubGlobal("fetch", fetchMock)
     const router = renderArchiveRoute()
 
     await screen.findByRole("link", { name: "First coin" })
-    const filters = screen.getByRole("navigation")
+    vi.useFakeTimers()
     const navigation = router.navigate({
       to: "/",
       search: { issuer: "ROMAN" },
     })
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:3001/v1/coins?issuer=ROMAN"
-      )
-    )
+    await filteredCoinsRequested.promise
+    await act(() => vi.advanceTimersByTimeAsync(201))
 
-    expect(filters).toBeVisible()
+    expect(screen.getByRole("navigation")).toBeVisible()
     expect(screen.getByRole("combobox", { name: "Issuer" })).toBeVisible()
 
-    resolveFilteredCoins(jsonResponse({ coins: [coin] }))
+    filteredCoinsResponse.resolve(jsonResponse({ coins: [coin] }))
+    await act(() => vi.advanceTimersByTimeAsync(500))
     await navigation
     expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveTextContent(
       "Roman Empire"
@@ -299,11 +327,9 @@ describe("Archive landing route", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((input: string | URL | Request) =>
-        Promise.resolve(
-          String(input).endsWith("/v1/issuers")
-            ? jsonResponse({ issuers })
-            : jsonResponse({ coins: [{ id: coinId }] })
-        )
+        String(input).endsWith("/v1/issuers")
+          ? Promise.resolve(jsonResponse({ issuers }))
+          : Promise.resolve(jsonResponse({ coins: [{ id: coinId }] }))
       )
     )
 
@@ -312,6 +338,7 @@ describe("Archive landing route", () => {
     expect(
       await screen.findByText("Invalid coin list response")
     ).toBeInTheDocument()
+    expect(screen.getByRole("combobox", { name: "Issuer" })).toBeVisible()
   })
 
   it("shows request failures", async () => {
@@ -427,7 +454,7 @@ describe("Archive landing route", () => {
     await act(() => vi.advanceTimersByTimeAsync(500))
     await navigation
     expect(
-      await screen.findByRole("heading", { name: "First coin" })
+      screen.getByRole("heading", { name: "First coin" })
     ).toBeVisible()
     expect(screen.queryByText("Loading coin…")).not.toBeInTheDocument()
   })
@@ -467,7 +494,7 @@ describe("Archive landing route", () => {
     await act(() => vi.advanceTimersByTimeAsync(500))
     await navigation
     expect(
-      await screen.findByRole("heading", { name: "First coin" })
+      screen.getByRole("heading", { name: "First coin" })
     ).toBeVisible()
   })
 

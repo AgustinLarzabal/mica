@@ -9,13 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as ExploreRouteImport } from './routes/_explore'
+import { Route as ExploreIndexRouteImport } from './routes/_explore.index'
 import { Route as CoinsCoinIdRouteImport } from './routes/coins.$coinId'
 
-const IndexRoute = IndexRouteImport.update({
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/_explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreIndexRoute = ExploreIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => ExploreRoute,
 } as any)
 const CoinsCoinIdRoute = CoinsCoinIdRouteImport.update({
   id: '/coins/$coinId',
@@ -24,39 +29,47 @@ const CoinsCoinIdRoute = CoinsCoinIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof ExploreIndexRoute
   '/coins/$coinId': typeof CoinsCoinIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/coins/$coinId': typeof CoinsCoinIdRoute
+  '/': typeof ExploreIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_explore': typeof ExploreRouteWithChildren
   '/coins/$coinId': typeof CoinsCoinIdRoute
+  '/_explore/': typeof ExploreIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths: '/' | '/coins/$coinId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/coins/$coinId'
-  id: '__root__' | '/' | '/coins/$coinId'
+  to: '/coins/$coinId' | '/'
+  id: '__root__' | '/_explore' | '/coins/$coinId' | '/_explore/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  ExploreRoute: typeof ExploreRouteWithChildren
   CoinsCoinIdRoute: typeof CoinsCoinIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_explore': {
+      id: '/_explore'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_explore/': {
+      id: '/_explore/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof ExploreIndexRouteImport
+      parentRoute: typeof ExploreRoute
     }
     '/coins/$coinId': {
       id: '/coins/$coinId'
@@ -68,8 +81,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ExploreRouteChildren {
+  ExploreIndexRoute: typeof ExploreIndexRoute
+}
+
+const ExploreRouteChildren: ExploreRouteChildren = {
+  ExploreIndexRoute: ExploreIndexRoute,
+}
+
+const ExploreRouteWithChildren =
+  ExploreRoute._addFileChildren(ExploreRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  ExploreRoute: ExploreRouteWithChildren,
   CoinsCoinIdRoute: CoinsCoinIdRoute,
 }
 export const routeTree = rootRouteImport

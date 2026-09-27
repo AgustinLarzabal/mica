@@ -7,8 +7,9 @@ import {
   InvalidIssuerListResponseError,
 } from "./api-client"
 import { InvalidCoinIdError, InvalidIssuerCodeError } from "./queries"
+import { Route as ExploreRoute } from "@/routes/_explore"
+import { Route as ExploreIndexRoute } from "@/routes/_explore.index"
 import { Route as CoinRoute } from "@/routes/coins.$coinId"
-import { Route as ArchiveRoute } from "@/routes/index"
 import { startInstance } from "@/start"
 
 vi.mock("@tanstack/react-devtools", () => ({
@@ -29,17 +30,17 @@ describe("Coin errors across the SSR serialization boundary", () => {
     },
     {
       ErrorType: InvalidCoinListResponseError,
-      route: ArchiveRoute,
+      route: ExploreIndexRoute,
       message: "Invalid coin list response",
     },
     {
       ErrorType: InvalidIssuerListResponseError,
-      route: ArchiveRoute,
+      route: ExploreRoute,
       message: "Invalid issuer list response",
     },
     {
       ErrorType: InvalidIssuerCodeError,
-      route: ArchiveRoute,
+      route: ExploreRoute,
       message: "Invalid issuer code",
     },
   ])(
