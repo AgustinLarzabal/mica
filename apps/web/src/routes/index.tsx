@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
+import { Suspense } from "react"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 import { RouteMessage } from "@/components/route-message"
 import {
@@ -27,10 +28,10 @@ export const Route = createFileRoute("/")({
   }),
   loaderDeps: ({ search: { issuer: issuerCode } }) => ({ issuerCode }),
   loader: async ({ context, deps: { issuerCode } }) => {
-    await Promise.all([
-      context.queryClient.query(coinListQueryOptions(issuerCode)),
-      context.queryClient.query(issuerListQueryOptions()),
-    ])
+    const coinListOptions = coinListQueryOptions(issuerCode)
+
+    void context.queryClient.prefetchQuery(coinListOptions)
+    await context.queryClient.ensureQueryData(issuerListQueryOptions())
   },
   pendingComponent: () => <RouteMessage>Loading coins…</RouteMessage>,
   pendingMs: 0,
@@ -44,13 +45,15 @@ function App() {
   )
 
   return (
-    <main className="mt-18 mb-14">
+    <main className="mt-18 mb-14 flex flex-1 flex-col">
       <ExploreFilters issuerCode={issuerCode} issuers={issuerList.issuers} />
-      {issuerCode && !selectedIssuer ? (
-        <RouteMessage>Issuer not found</RouteMessage>
-      ) : (
-        <Explore issuer={selectedIssuer} />
-      )}
+      <Suspense fallback={<RouteMessage>Loading coins…</RouteMessage>}>
+        {issuerCode && !selectedIssuer ? (
+          <RouteMessage>Issuer not found</RouteMessage>
+        ) : (
+          <Explore issuer={selectedIssuer} />
+        )}
+      </Suspense>
     </main>
   )
 }

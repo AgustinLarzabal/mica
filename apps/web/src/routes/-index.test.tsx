@@ -84,45 +84,41 @@ describe("Archive landing route", () => {
     expect(
       await screen.findByRole("link", { name: "First coin" })
     ).toBeVisible()
-    expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveValue("AR")
+    expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveTextContent(
+      "Argentina"
+    )
     expect(router.state.location.searchStr).toBe("?issuer=AR")
   })
 
-  it("lists every Issuer in API order and navigates through URL state", async () => {
+  it("keeps the selected Issuer synchronized with URL state", async () => {
     const fetchMock = vi.fn(createArchiveFetch())
     vi.stubGlobal("fetch", fetchMock)
-    const user = userEvent.setup()
     const router = renderArchiveRoute()
     const select = await screen.findByRole("combobox", { name: "Issuer" })
 
-    expect(
-      screen.getAllByRole("option").map((option) => option.textContent)
-    ).toEqual(["All issuers", "Argentina", "Roman Empire", "Uruguay"])
+    expect(select).toHaveTextContent("All issuers")
+    await router.navigate({ to: "/", search: { issuer: "ROMAN" } })
 
-    await user.selectOptions(select, "ROMAN")
-
-    await waitFor(() =>
-      expect(router.state.location.searchStr).toBe("?issuer=ROMAN")
-    )
-    expect(select).toHaveValue("ROMAN")
+    expect(router.state.location.searchStr).toBe("?issuer=ROMAN")
+    expect(select).toHaveTextContent("Roman Empire")
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:3001/v1/coins?issuer=ROMAN"
     )
 
-    await user.selectOptions(select, "")
+    await router.navigate({ to: "/", search: {} })
 
-    await waitFor(() => expect(router.state.location.searchStr).toBe(""))
-    expect(select).toHaveValue("")
+    expect(router.state.location.searchStr).toBe("")
+    expect(select).toHaveTextContent("All issuers")
 
     router.history.back()
     await waitFor(() =>
       expect(router.state.location.searchStr).toBe("?issuer=ROMAN")
     )
-    expect(select).toHaveValue("ROMAN")
+    expect(select).toHaveTextContent("Roman Empire")
 
     router.history.forward()
     await waitFor(() => expect(router.state.location.searchStr).toBe(""))
-    expect(select).toHaveValue("")
+    expect(select).toHaveTextContent("All issuers")
   })
 
   it("places the Issuer select in the Explore filters navigation", async () => {
@@ -136,6 +132,47 @@ describe("Archive landing route", () => {
     )
   })
 
+  it("keeps the Explore filters visible while a newly selected Issuer loads", async () => {
+    let resolveFilteredCoins!: (response: Response) => void
+    const filteredCoinsResponse = new Promise<Response>((resolve) => {
+      resolveFilteredCoins = resolve
+    })
+    const fetchMock = vi.fn((input: string | URL | Request) => {
+      const url = String(input)
+
+      if (url.endsWith("/v1/issuers")) {
+        return Promise.resolve(jsonResponse({ issuers }))
+      }
+
+      return url.endsWith("/v1/coins?issuer=ROMAN")
+        ? filteredCoinsResponse
+        : Promise.resolve(jsonResponse({ coins: [coin] }))
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    const router = renderArchiveRoute()
+
+    await screen.findByRole("link", { name: "First coin" })
+    const filters = screen.getByRole("navigation")
+    const navigation = router.navigate({
+      to: "/",
+      search: { issuer: "ROMAN" },
+    })
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:3001/v1/coins?issuer=ROMAN"
+      )
+    )
+
+    expect(filters).toBeVisible()
+    expect(screen.getByRole("combobox", { name: "Issuer" })).toBeVisible()
+
+    resolveFilteredCoins(jsonResponse({ coins: [coin] }))
+    await navigation
+    expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveTextContent(
+      "Roman Empire"
+    )
+  })
+
   it("names a known selected Issuer when it has no Coins", async () => {
     vi.stubGlobal("fetch", vi.fn(createArchiveFetch([])))
 
@@ -144,20 +181,18 @@ describe("Archive landing route", () => {
     expect(
       await screen.findByText("No coins found for Argentina")
     ).toBeVisible()
-    expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveValue("AR")
+    expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveTextContent(
+      "Argentina"
+    )
   })
 
   it("keeps the populated select available when the URL Issuer is unknown", async () => {
     vi.stubGlobal("fetch", vi.fn(createArchiveFetch([])))
-
     renderArchiveRoute("/?issuer=ZZ")
 
     expect(await screen.findByText("Issuer not found")).toBeVisible()
-    expect(screen.getByRole("combobox", { name: "Issuer" })).toHaveValue("ZZ")
-    expect(
-      screen.getByRole("option", { name: "Unknown issuer (ZZ)" })
-    ).toBeDisabled()
-    expect(screen.getAllByRole("option")).toHaveLength(5)
+    const select = screen.getByRole("combobox", { name: "Issuer" })
+    expect(select).toHaveTextContent("Unknown issuer (ZZ)")
   })
 
   it("keeps filtered and unfiltered Coin collections distinct", async () => {

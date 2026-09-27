@@ -1,4 +1,4 @@
-import { IssuerSelect } from "./issuer-select"
+import { IssuerSelect } from "./explore-filters-issuer-select"
 import type { IssuerResponse } from "@workspace/api"
 
 export function ExploreFilters({
