@@ -10,10 +10,19 @@ export interface RouterContext {
 
 // Tune both thresholds together when production navigation traces are available.
 const ROUTE_PENDING_FEEDBACK_MS = 200
+const BROWSER_QUERY_RETENTION_MS = 30 * 60 * 1_000
 
 export function getRouter(options: { history?: RouterHistory } = {}) {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+    defaultOptions: {
+      queries: {
+        gcTime:
+          typeof window === "undefined"
+            ? Infinity
+            : BROWSER_QUERY_RETENTION_MS,
+        retry: false,
+      },
+    },
   })
   const router = createTanStackRouter({
     context: { queryClient },

@@ -3,6 +3,11 @@ import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import {
+  coinDetailQueryOptions,
+  coinListQueryOptions,
+  issuerListQueryOptions,
+} from "@/features/coin-viewer/queries"
 import { getRouter } from "@/router"
 
 vi.mock("@tanstack/react-devtools", () => ({
@@ -557,6 +562,19 @@ describe("Archive landing route", () => {
     })
 
     expect(router.options.defaultPreload).toBe("intent")
+  })
+
+  it("retains browser navigation queries for 30 minutes without changing freshness", () => {
+    const router = getRouter({
+      history: createMemoryHistory({ initialEntries: ["/"] }),
+    })
+
+    expect(
+      router.options.context.queryClient.getDefaultOptions().queries?.gcTime
+    ).toBe(30 * 60 * 1_000)
+    expect(coinListQueryOptions().staleTime).toBe(30_000)
+    expect(coinDetailQueryOptions(coinId).staleTime).toBe(30_000)
+    expect(issuerListQueryOptions().staleTime).toBe(Infinity)
   })
 
   it("enables view transitions for router navigations", () => {
