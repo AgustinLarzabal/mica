@@ -143,6 +143,9 @@ describe("Coin viewer route", () => {
     expect(flag).toHaveAttribute("src", expect.stringMatching(/\/ar\.svg$/))
     expect(flag).toHaveAttribute("aria-hidden", "true")
     expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledWith(
+      `http://localhost:3001/v1/coins/${coinId}`
+    )
   })
 
   it("renders an Archive-defined Issuer without a flag or visible Issuer Code", async () => {

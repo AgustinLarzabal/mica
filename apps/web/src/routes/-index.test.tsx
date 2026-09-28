@@ -397,28 +397,46 @@ describe("Archive landing route", () => {
   })
 
   it("navigates from a Coin tile to the Coin detail route", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn((input: string | URL | Request) => {
-        const url = String(input)
-        return Promise.resolve(
-          url.endsWith("/v1/issuers")
-            ? jsonResponse({ issuers })
-            : jsonResponse(
-                url.endsWith(`/v1/coins/${coinId}`) ? coin : { coins: [coin] }
-              )
-        )
-      })
-    )
+    const fetchMock = vi.fn((input: string | URL | Request) => {
+      const url = String(input)
+      return Promise.resolve(
+        url.endsWith("/v1/issuers")
+          ? jsonResponse({ issuers })
+          : url.endsWith(`/v1/coins/${coinId}`)
+            ? jsonResponse(coin)
+            : jsonResponse({ coins: [coin] })
+      )
+    })
+    vi.stubGlobal("fetch", fetchMock)
     const user = userEvent.setup()
     const router = renderArchiveRoute()
+    const coinLink = await screen.findByRole("link", { name: "First coin" })
+    const listUpdatedAt = router.options.context.queryClient.getQueryState([
+      "coins",
+      "list",
+      null,
+    ])?.dataUpdatedAt
 
-    await user.click(await screen.findByRole("link", { name: "First coin" }))
+    expect(
+      router.options.context.queryClient.getQueryState([
+        "coins",
+        "detail",
+        coinId,
+      ])?.dataUpdatedAt
+    ).toBe(listUpdatedAt)
+
+    await user.click(coinLink)
 
     expect(
       await screen.findByRole("heading", { name: "First coin" })
     ).toBeInTheDocument()
     expect(router.state.location.pathname).toBe(`/coins/${coinId}`)
+    expect(screen.queryByText("Loading coin…")).not.toBeInTheDocument()
+    expect(
+      fetchMock.mock.calls.filter(([input]) =>
+        String(input).endsWith(`/v1/coins/${coinId}`)
+      )
+    ).toHaveLength(0)
   })
 
   it("does not show pending feedback when Coin detail resolves quickly", async () => {
@@ -439,8 +457,11 @@ describe("Archive landing route", () => {
       )
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderArchiveRoute()
+    const router = renderArchiveRoute()
     const coinLink = await screen.findByRole("link", { name: "First coin" })
+    router.options.context.queryClient.removeQueries({
+      queryKey: ["coins", "detail", coinId],
+    })
     vi.useFakeTimers()
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
@@ -479,8 +500,11 @@ describe("Archive landing route", () => {
         )
       })
     )
-    renderArchiveRoute()
+    const router = renderArchiveRoute()
     const coinLink = await screen.findByRole("link", { name: "First coin" })
+    router.options.context.queryClient.removeQueries({
+      queryKey: ["coins", "detail", coinId],
+    })
     vi.useFakeTimers()
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
@@ -498,16 +522,9 @@ describe("Archive landing route", () => {
     ).toBeVisible()
   })
 
-  it("preloads Coin detail on intent and reuses it during navigation", async () => {
-    const detailResponse = createDeferred<Response>()
-    const detailRequested = createDeferred<void>()
+  it("reuses primed Coin detail during intent preload and navigation", async () => {
     const fetchMock = vi.fn((input: string | URL | Request) => {
       const url = String(input)
-
-      if (url.endsWith(`/v1/coins/${coinId}`)) {
-        detailRequested.resolve()
-        return detailResponse.promise
-      }
 
       return Promise.resolve(
         url.endsWith("/v1/issuers")
@@ -517,22 +534,10 @@ describe("Archive landing route", () => {
     })
     vi.stubGlobal("fetch", fetchMock)
     const user = userEvent.setup()
-    const router = renderArchiveRoute()
+    renderArchiveRoute()
     const coinLink = await screen.findByRole("link", { name: "First coin" })
 
     await user.hover(coinLink)
-    await detailRequested.promise
-    detailResponse.resolve(jsonResponse(coin))
-    await waitFor(() =>
-      expect(
-        router.options.context.queryClient.getQueryState([
-          "coins",
-          "detail",
-          coinId,
-        ])?.status
-      ).toBe("success")
-    )
-
     await user.click(coinLink)
 
     expect(
@@ -543,7 +548,15 @@ describe("Archive landing route", () => {
       fetchMock.mock.calls.filter(([input]) =>
         String(input).endsWith(`/v1/coins/${coinId}`)
       )
-    ).toHaveLength(1)
+    ).toHaveLength(0)
+  })
+
+  it("configures intent preloading for router navigations", () => {
+    const router = getRouter({
+      history: createMemoryHistory({ initialEntries: ["/"] }),
+    })
+
+    expect(router.options.defaultPreload).toBe("intent")
   })
 
   it("enables view transitions for router navigations", () => {

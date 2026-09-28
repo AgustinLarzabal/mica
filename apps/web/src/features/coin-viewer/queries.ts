@@ -2,6 +2,8 @@ import { queryOptions } from "@tanstack/react-query"
 import { coinIdSchema, issuerCodeSchema } from "@workspace/api"
 
 import { getCoin, getCoins, getIssuers } from "./api-client"
+import type { QueryClient } from "@tanstack/react-query"
+import type { CoinListResponse } from "@workspace/api"
 
 export class InvalidCoinIdError extends Error {}
 export class InvalidIssuerCodeError extends Error {}
@@ -37,12 +39,28 @@ export function validateCoinId(coinId: string) {
   return coinId
 }
 
-export function coinDetailQueryOptions(coinId: string) {
+function coinDetailQueryKey(coinId: string) {
   const validCoinId = validateCoinId(coinId)
 
+  return ["coins", "detail", validCoinId] as const
+}
+
+export function primeCoinDetailQueries(
+  queryClient: QueryClient,
+  coinList: CoinListResponse,
+  updatedAt: number
+) {
+  for (const coin of coinList.coins) {
+    queryClient.setQueryData(coinDetailQueryKey(coin.id), coin, { updatedAt })
+  }
+}
+
+export function coinDetailQueryOptions(coinId: string) {
+  const queryKey = coinDetailQueryKey(coinId)
+
   return queryOptions({
-    queryKey: ["coins", "detail", validCoinId] as const,
-    queryFn: () => getCoin(validCoinId),
+    queryKey,
+    queryFn: () => getCoin(queryKey[2]),
     staleTime: 30_000,
   })
 }
