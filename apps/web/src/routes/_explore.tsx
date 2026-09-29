@@ -3,12 +3,12 @@ import { createFileRoute, Outlet } from "@tanstack/react-router"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 
 import { RouteMessage } from "@/components/route-message"
-import { InvalidIssuerListResponseError } from "@/features/coin-viewer/api-client"
 import {
   coinListQueryOptions,
   InvalidIssuerCodeError,
+  InvalidIssuerListResponseError,
   issuerListQueryOptions,
-} from "@/features/coin-viewer/queries"
+} from "@/data/archive"
 import { ExploreFilters } from "@/features/explore/components/explore-filters"
 
 export const Route = createFileRoute("/_explore")({

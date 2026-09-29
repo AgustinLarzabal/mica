@@ -1,9 +1,9 @@
 import { createCsrfMiddleware, createStart } from "@tanstack/react-start"
 
-import { coinErrorSerializationAdapters } from "@/features/coin-viewer/error-serialization"
+import { archiveErrorSerializationAdapters } from "@/data/archive"
 
 export const startInstance = createStart(() => ({
-  serializationAdapters: coinErrorSerializationAdapters,
+  serializationAdapters: archiveErrorSerializationAdapters,
   // Keep Start's default server-function protection when providing a custom entry.
   requestMiddleware: [
     createCsrfMiddleware({

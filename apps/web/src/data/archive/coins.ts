@@ -1,53 +1,25 @@
+import { queryOptions } from "@tanstack/react-query"
 import {
+  coinIdSchema,
   coinListResponseSchema,
   coinNotFoundErrorSchema,
   coinResponseSchema,
-  issuerListResponseSchema,
+  issuerCodeSchema,
 } from "@workspace/api"
-import type {
-  CoinListResponse,
-  CoinResponse,
-  IssuerListResponse,
-} from "@workspace/api"
+import type { QueryClient } from "@tanstack/react-query"
+import type { CoinListResponse, CoinResponse } from "@workspace/api"
 
 import { API_BASE_URL } from "@/config"
 
 export class CoinNotFoundError extends Error {}
 export class InvalidCoinResponseError extends Error {}
-export class CoinRequestError extends Error {}
+class CoinRequestError extends Error {}
 export class InvalidCoinListResponseError extends Error {}
-export class CoinListRequestError extends Error {}
-export class InvalidIssuerListResponseError extends Error {}
-export class IssuerListRequestError extends Error {}
+class CoinListRequestError extends Error {}
+export class InvalidCoinIdError extends Error {}
+export class InvalidIssuerCodeError extends Error {}
 
-export async function getIssuers(): Promise<IssuerListResponse> {
-  let response: Response
-
-  try {
-    response = await fetch(`${API_BASE_URL}/v1/issuers`)
-  } catch (error) {
-    throw new IssuerListRequestError("Issuer list request failed", {
-      cause: error,
-    })
-  }
-
-  if (!response.ok) {
-    throw new IssuerListRequestError(
-      `Issuer list request failed with HTTP ${response.status}`
-    )
-  }
-
-  try {
-    return issuerListResponseSchema.parse(await response.json())
-  } catch (error) {
-    throw new InvalidIssuerListResponseError(
-      "Issuer list response is invalid",
-      { cause: error }
-    )
-  }
-}
-
-export async function getCoins(issuerCode?: string): Promise<CoinListResponse> {
+async function getCoins(issuerCode?: string): Promise<CoinListResponse> {
   let response: Response
 
   try {
@@ -78,7 +50,7 @@ export async function getCoins(issuerCode?: string): Promise<CoinListResponse> {
   }
 }
 
-export async function getCoin(coinId: string): Promise<CoinResponse> {
+async function getCoin(coinId: string): Promise<CoinResponse> {
   let response: Response
 
   try {
@@ -110,4 +82,53 @@ export async function getCoin(coinId: string): Promise<CoinResponse> {
       cause: error,
     })
   }
+}
+
+export function coinListQueryOptions(issuerCode?: string) {
+  if (
+    issuerCode !== undefined &&
+    !issuerCodeSchema.safeParse(issuerCode).success
+  ) {
+    throw new InvalidIssuerCodeError("Invalid issuer code")
+  }
+
+  return queryOptions({
+    queryKey: ["coins", "list", issuerCode ?? null] as const,
+    queryFn: () => getCoins(issuerCode),
+    staleTime: 30_000,
+  })
+}
+
+export function validateCoinId(coinId: string) {
+  if (!coinIdSchema.safeParse(coinId).success) {
+    throw new InvalidCoinIdError("Invalid coin identifier")
+  }
+
+  return coinId
+}
+
+function coinDetailQueryKey(coinId: string) {
+  const validCoinId = validateCoinId(coinId)
+
+  return ["coins", "detail", validCoinId] as const
+}
+
+export function primeCoinDetailQueries(
+  queryClient: QueryClient,
+  coinList: CoinListResponse,
+  updatedAt: number
+) {
+  for (const coin of coinList.coins) {
+    queryClient.setQueryData(coinDetailQueryKey(coin.id), coin, { updatedAt })
+  }
+}
+
+export function coinDetailQueryOptions(coinId: string) {
+  const queryKey = coinDetailQueryKey(coinId)
+
+  return queryOptions({
+    queryKey,
+    queryFn: () => getCoin(queryKey[2]),
+    staleTime: 30_000,
+  })
 }

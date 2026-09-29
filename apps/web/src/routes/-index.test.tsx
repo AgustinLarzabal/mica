@@ -7,7 +7,7 @@ import {
   coinDetailQueryOptions,
   coinListQueryOptions,
   issuerListQueryOptions,
-} from "@/features/coin-viewer/queries"
+} from "@/data/archive"
 import { getRouter } from "@/router"
 
 vi.mock("@tanstack/react-devtools", () => ({

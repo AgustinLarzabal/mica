@@ -3,15 +3,13 @@ import type { ErrorComponentProps } from "@tanstack/react-router"
 
 import { RouteMessage } from "@/components/route-message"
 import {
-  CoinNotFoundError,
-  InvalidCoinResponseError,
-} from "@/features/coin-viewer/api-client"
-import { CoinViewer } from "@/features/coin-viewer/components/coin-viewer"
-import {
   coinDetailQueryOptions,
+  CoinNotFoundError,
   InvalidCoinIdError,
+  InvalidCoinResponseError,
   validateCoinId,
-} from "@/features/coin-viewer/queries"
+} from "@/data/archive"
+import { CoinViewer } from "@/features/coin-viewer/components/coin-viewer"
 
 export const Route = createFileRoute("/coins/$coinId")({
   component: CoinViewerRoute,

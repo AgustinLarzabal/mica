@@ -1,12 +1,15 @@
+import { QueryClient } from "@tanstack/react-query"
 import { render, screen } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
+  coinDetailQueryOptions,
+  InvalidCoinIdError,
   InvalidCoinListResponseError,
   InvalidCoinResponseError,
+  InvalidIssuerCodeError,
   InvalidIssuerListResponseError,
-} from "./api-client"
-import { InvalidCoinIdError, InvalidIssuerCodeError } from "./queries"
+} from "./archive"
 import { Route as ExploreRoute } from "@/routes/_explore"
 import { Route as ExploreIndexRoute } from "@/routes/_explore.index"
 import { Route as CoinRoute } from "@/routes/coins.$coinId"
@@ -16,7 +19,69 @@ vi.mock("@tanstack/react-devtools", () => ({
   TanStackDevtools: () => null,
 }))
 
-describe("Coin errors across the SSR serialization boundary", () => {
+const coinId = "00000000-0000-4000-8000-000000000001"
+
+function coinResponse(issuer: { code: string; name: string; id?: string }) {
+  return new Response(
+    JSON.stringify({
+      id: coinId,
+      title: "First coin",
+      issuer,
+      createdAt: "2026-09-16T10:00:00.000Z",
+      updatedAt: "2026-09-16T11:00:00.000Z",
+    }),
+    { headers: { "content-type": "application/json" } }
+  )
+}
+
+function createQueryClient() {
+  return new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe("Archive data module", () => {
+  it.each([
+    ["ISO", { name: "Argentina", code: "AR" }],
+    ["Archive-defined", { name: "Roman Empire", code: "ROMAN" }],
+  ])("accepts an %s Issuer Code", async (_category, issuer) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(coinResponse(issuer)))
+    )
+    const queryClient = createQueryClient()
+
+    await expect(
+      queryClient.fetchQuery(coinDetailQueryOptions(coinId))
+    ).resolves.toEqual(expect.objectContaining({ issuer }))
+    queryClient.clear()
+  })
+
+  it("rejects an exposed Issuer UUID", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          coinResponse({
+            id: "10000000-0000-4000-8000-000000000001",
+            name: "Roman Empire",
+            code: "ROMAN",
+          })
+        )
+      )
+    )
+    const queryClient = createQueryClient()
+
+    await expect(
+      queryClient.fetchQuery(coinDetailQueryOptions(coinId))
+    ).rejects.toBeInstanceOf(InvalidCoinResponseError)
+    queryClient.clear()
+  })
+
   it.each([
     {
       ErrorType: InvalidCoinIdError,
@@ -44,7 +109,7 @@ describe("Coin errors across the SSR serialization boundary", () => {
       message: "Invalid issuer code",
     },
   ])(
-    "preserves '$message' after transfer",
+    "preserves '$message' after SSR serialization",
     async ({ ErrorType, route, message }) => {
       const original = new ErrorType(message, {
         cause: new Error("Internal response details"),

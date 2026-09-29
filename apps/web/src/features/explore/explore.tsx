@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { ExploreGrid } from "./components/explore-grid"
 import type { IssuerResponse } from "@workspace/api"
 import { RouteMessage } from "@/components/route-message"
-import { coinListQueryOptions } from "@/features/coin-viewer/queries"
+import { coinListQueryOptions } from "@/data/archive"
 
 export function Explore({ issuer }: { issuer?: IssuerResponse }) {
   const { data } = useSuspenseQuery(coinListQueryOptions(issuer?.code))
