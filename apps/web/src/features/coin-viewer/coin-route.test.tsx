@@ -1,5 +1,6 @@
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router"
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { getRouter } from "@/router"
@@ -112,6 +113,74 @@ describe("Coin viewer route", () => {
     renderCoinRoute()
 
     expect(await screen.findByText("Unable to load coin")).toBeInTheDocument()
+  })
+
+  it("renders one responsive Coin viewer tree", async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          jsonResponse({
+            id: coinId,
+            title: "First coin",
+            issuer: { name: "Argentina", code: "AR" },
+            createdAt: "2026-09-16T10:00:00.000Z",
+            updatedAt: "2026-09-16T10:00:00.000Z",
+          })
+        )
+      )
+    )
+
+    renderCoinRoute()
+
+    expect(
+      await screen.findAllByRole("tab", { name: "Obverse", hidden: true })
+    ).toHaveLength(1)
+
+    await user.click(screen.getByRole("button", { name: "Details" }))
+
+    expect(
+      screen.getAllByRole("heading", { name: "First coin", hidden: true })
+    ).toHaveLength(1)
+  })
+
+  it("switches between the mobile Coin viewer panels", async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          jsonResponse({
+            id: coinId,
+            title: "First coin",
+            issuer: { name: "Argentina", code: "AR" },
+            createdAt: "2026-09-16T10:00:00.000Z",
+            updatedAt: "2026-09-16T10:00:00.000Z",
+          })
+        )
+      )
+    )
+
+    renderCoinRoute()
+
+    const previewToggle = await screen.findByRole("button", { name: "Preview" })
+    const detailsToggle = screen.getByRole("button", { name: "Details" })
+
+    expect(previewToggle).toHaveAttribute("aria-pressed", "true")
+    expect(detailsToggle).toHaveAttribute("aria-pressed", "false")
+
+    detailsToggle.focus()
+    await user.keyboard("{Enter}")
+
+    expect(previewToggle).toHaveAttribute("aria-pressed", "false")
+    expect(detailsToggle).toHaveAttribute("aria-pressed", "true")
+
+    previewToggle.focus()
+    await user.keyboard(" ")
+
+    expect(previewToggle).toHaveAttribute("aria-pressed", "true")
+    expect(detailsToggle).toHaveAttribute("aria-pressed", "false")
   })
 
   it("renders persisted Coin data", async () => {
