@@ -38,7 +38,7 @@ export function IssuerSelect({
   ]
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex w-full items-center gap-3">
       <Select
         name="issuer"
         items={items}
@@ -53,7 +53,7 @@ export function IssuerSelect({
         <SelectTrigger
           id="issuer-filter"
           aria-label="Issuer"
-          className="w-[calc(20vw-(--spacing(20)))]"
+          className="w-full md:w-[calc(33.3vw-(--spacing(10)))] lg:w-[calc(25vw-(--spacing(10)))] xl:w-[calc(20vw-(--spacing(20)))]"
         >
           <SelectValue />
         </SelectTrigger>
